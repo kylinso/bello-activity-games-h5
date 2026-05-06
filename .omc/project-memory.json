@@ -1,0 +1,296 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1777563366520,
+  "projectRoot": "/Users/dk/hm/bello-activity-games-h5",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "5.2.0",
+        "category": "build"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite --host 0.0.0.0",
+      "build": "tsc && vite build",
+      "preview": "vite preview --host 0.0.0.0",
+      "type-check": "tsc --noEmit"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "public",
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 1,
+      "lastAccessed": 1777563366491,
+      "keyFiles": [
+        "favicon.svg"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 3,
+      "lastAccessed": 1777563366491,
+      "keyFiles": [
+        "App.tsx",
+        "main.tsx",
+        "vite-env.d.ts"
+      ]
+    },
+    "src/api": {
+      "path": "src/api",
+      "purpose": "API routes",
+      "fileCount": 2,
+      "lastAccessed": 1777563366504,
+      "keyFiles": [
+        "activityApi.ts",
+        "mock.ts"
+      ]
+    },
+    "src/assets": {
+      "path": "src/assets",
+      "purpose": "Static assets",
+      "fileCount": 5,
+      "lastAccessed": 1777563366505,
+      "keyFiles": [
+        "bello-mark.svg",
+        "bingo-prize.svg",
+        "bomb.svg"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 10,
+      "lastAccessed": 1777563366506,
+      "keyFiles": [
+        "AdBanner.tsx",
+        "BingoGame.tsx",
+        "BlockingState.tsx"
+      ]
+    },
+    "src/lib": {
+      "path": "src/lib",
+      "purpose": "Library code",
+      "fileCount": 2,
+      "lastAccessed": 1777563366506,
+      "keyFiles": [
+        "gameRules.ts",
+        "storage.ts"
+      ]
+    },
+    "src/types": {
+      "path": "src/types",
+      "purpose": "Type definitions",
+      "fileCount": 2,
+      "lastAccessed": 1777563366507,
+      "keyFiles": [
+        "activity.ts",
+        "ui.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/styles/global.css",
+      "accessCount": 5,
+      "lastAccessed": 1777563584829,
+      "type": "file"
+    },
+    {
+      "path": "src/App.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1777563653398,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/gameRules.ts",
+      "accessCount": 4,
+      "lastAccessed": 1777563658014,
+      "type": "file"
+    },
+    {
+      "path": "src/api/activityApi.ts",
+      "accessCount": 4,
+      "lastAccessed": 1777563658405,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/storage.ts",
+      "accessCount": 4,
+      "lastAccessed": 1777563659148,
+      "type": "file"
+    },
+    {
+      "path": "src/components/DemoStage.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1777563665640,
+      "type": "file"
+    },
+    {
+      "path": "src/api/mock.ts",
+      "accessCount": 4,
+      "lastAccessed": 1777563667283,
+      "type": "file"
+    },
+    {
+      "path": "src/components/ResultScreen.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1777563524055,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 3,
+      "lastAccessed": 1777563591051,
+      "type": "file"
+    },
+    {
+      "path": "tsconfig.json",
+      "accessCount": 3,
+      "lastAccessed": 1777563652366,
+      "type": "file"
+    },
+    {
+      "path": "vite.config.ts",
+      "accessCount": 3,
+      "lastAccessed": 1777563652992,
+      "type": "file"
+    },
+    {
+      "path": "src/components/AdBanner.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1777563659505,
+      "type": "file"
+    },
+    {
+      "path": "src/components/DiamondRainGame.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1777563659815,
+      "type": "file"
+    },
+    {
+      "path": "src/components/BingoGame.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1777563665696,
+      "type": "file"
+    },
+    {
+      "path": "src/i18n/index.ts",
+      "accessCount": 3,
+      "lastAccessed": 1777563665958,
+      "type": "file"
+    },
+    {
+      "path": "src/types/activity.ts",
+      "accessCount": 3,
+      "lastAccessed": 1777563667229,
+      "type": "file"
+    },
+    {
+      "path": "src/components/BlockingState.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1777563570108,
+      "type": "file"
+    },
+    {
+      "path": "src/components/HeaderBar.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1777563597827,
+      "type": "file"
+    },
+    {
+      "path": "src/types/ui.ts",
+      "accessCount": 2,
+      "lastAccessed": 1777563602872,
+      "type": "file"
+    },
+    {
+      "path": "src/components/LanguageSwitch.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1777563610387,
+      "type": "file"
+    },
+    {
+      "path": ".env.example",
+      "accessCount": 2,
+      "lastAccessed": 1777563614233,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1777563499094,
+      "type": "file"
+    },
+    {
+      "path": "src/components/LoadingState.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1777563520445,
+      "type": "file"
+    },
+    {
+      "path": "src/components/FxLayer.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1777563520499,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

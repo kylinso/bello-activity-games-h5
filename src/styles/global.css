@@ -597,60 +597,247 @@ a {
 }
 
 .ad-banner {
-  flex: 0 0 20dvh;
-  min-height: 104px;
+  position: relative;
+  flex: 0 0 22dvh;
+  min-height: 124px;
   overflow: hidden;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  background: #10191d;
+  border-top: 1px solid rgba(16, 25, 29, 0.08);
+  color: #10191d;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(251, 123, 33, 0.2), transparent 26%),
+    radial-gradient(circle at 78% 10%, rgba(36, 214, 181, 0.2), transparent 28%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(232, 251, 247, 0.94) 52%, #fff8ea),
+    #f4f8f7;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 -16px 34px rgba(16, 25, 29, 0.06);
+}
+
+.ad-banner::before,
+.ad-banner::after {
+  position: absolute;
+  pointer-events: none;
+  content: "";
+}
+
+.ad-banner::before {
+  inset: 12px;
+  border: 1px solid rgba(251, 123, 33, 0.14);
+  border-radius: 8px;
+}
+
+.ad-banner::after {
+  inset: 0;
+  opacity: 0.44;
+  background:
+    linear-gradient(90deg, rgba(36, 214, 181, 0.14) 0 1px, transparent 1px 100%),
+    linear-gradient(180deg, rgba(251, 123, 33, 0.12) 0 1px, transparent 1px 100%);
+  background-size: 44px 44px;
 }
 
 .banner-track {
+  position: relative;
+  z-index: 1;
   display: flex;
   width: max-content;
   height: 100%;
   align-items: center;
   gap: 18px;
-  padding: 0 18px;
-  animation: bannerScroll 26s linear infinite;
+  padding: 15px 18px;
+  animation: bannerScroll 30s linear infinite;
 }
 
 .banner-item {
-  display: flex;
-  width: 330px;
-  min-height: 76px;
+  position: relative;
+  display: grid;
+  width: 360px;
+  min-height: 92px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  gap: 16px;
+  overflow: hidden;
+  padding: 15px 16px;
+  border: 1px solid rgba(16, 25, 29, 0.1);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.94), rgba(255, 248, 234, 0.9)),
+    #ffffff;
+  box-shadow:
+    0 16px 32px rgba(16, 25, 29, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.68);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
-.banner-item svg {
+.banner-item::before,
+.banner-item::after {
+  position: absolute;
+  pointer-events: none;
+  content: "";
+}
+
+.banner-item::before {
+  inset: 0;
+  opacity: 0;
+  background:
+    linear-gradient(120deg, transparent 0 30%, rgba(255, 229, 168, 0.66) 34%, transparent 42%),
+    linear-gradient(180deg, transparent, rgba(36, 214, 181, 0.08));
+  transition: opacity 180ms ease;
+}
+
+.banner-item::after {
+  top: 15px;
+  right: 42px;
+  width: 42px;
+  height: 42px;
+  border: 2px solid rgba(251, 123, 33, 0.22);
+  border-radius: 8px;
+  transform: rotate(45deg);
+  animation: slowSpin 14s linear infinite;
+}
+
+.banner-item:hover {
+  border-color: rgba(251, 123, 33, 0.36);
+  box-shadow:
+    0 18px 34px rgba(16, 25, 29, 0.13),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.76);
+  transform: translateY(-2px);
+}
+
+.banner-item:hover::before {
+  opacity: 1;
+}
+
+.banner-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+.banner-item-2 {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.94), rgba(232, 251, 247, 0.92)),
+    #ffffff;
+}
+
+.banner-item-3 {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.94), rgba(255, 229, 168, 0.78)),
+    #ffffff;
+}
+
+.banner-visual {
+  position: relative;
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.32), transparent 28%),
+    linear-gradient(145deg, #10191d, #263238 52%, #fb7b21 130%);
+  box-shadow: 0 12px 22px rgba(16, 25, 29, 0.22);
+}
+
+.banner-visual svg {
   flex: 0 0 auto;
-  color: #ffe5a8;
-  font-size: 24px;
+  font-size: 25px;
 }
 
-.banner-item span {
+.banner-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner-visual i,
+.banner-visual b {
+  position: absolute;
+  display: block;
+  content: "";
+}
+
+.banner-visual i {
+  inset: -44%;
+  background: conic-gradient(
+    from 90deg,
+    transparent,
+    rgba(255, 255, 255, 0.72),
+    transparent,
+    rgba(255, 255, 255, 0.28),
+    transparent
+  );
+  animation: spinFlash 3.2s linear infinite;
+}
+
+.banner-visual b {
+  right: -10px;
+  bottom: -8px;
+  width: 32px;
+  height: 32px;
+  border: 5px solid rgba(255, 229, 168, 0.38);
+  border-radius: 999px;
+}
+
+.banner-copy {
+  display: grid;
+  gap: 4px;
   min-width: 0;
 }
 
-.banner-item strong,
-.banner-item small {
+.banner-kicker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #0b6f60;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.banner-kicker i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #24d6b5;
+  box-shadow: 0 0 14px rgba(36, 214, 181, 0.7);
+}
+
+.banner-copy strong,
+.banner-copy small {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.banner-item strong {
+.banner-copy strong {
   font-size: 16px;
+  line-height: 1.12;
 }
 
-.banner-item small {
-  color: #b9c8cd;
+.banner-copy small {
+  color: #41535a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.banner-cta {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(16, 25, 29, 0.1);
+  border-radius: 999px;
+  color: #fb7b21;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.banner-cta svg {
   font-size: 13px;
 }
 
@@ -1115,6 +1302,21 @@ a {
     padding: 8px;
     border-width: 7px;
   }
+
+  .banner-track {
+    gap: 12px;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .banner-item {
+    width: min(84vw, 330px);
+    gap: 12px;
+  }
+
+  .banner-cta {
+    display: none;
+  }
 }
 
 @media (max-height: 720px) and (orientation: landscape) {
@@ -1149,7 +1351,23 @@ a {
   }
 
   .ad-banner {
-    min-height: 86px;
+    min-height: 104px;
+  }
+
+  .banner-track {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .banner-item {
+    width: 326px;
+    min-height: 82px;
+    padding: 12px 14px;
+  }
+
+  .banner-visual {
+    width: 54px;
+    height: 54px;
   }
 }
 
