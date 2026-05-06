@@ -112,9 +112,11 @@ a {
 }
 
 .brand-mark {
+  display: block;
   width: 48px;
   height: 48px;
   border-radius: 8px;
+  object-fit: contain;
 }
 
 .header-actions {
@@ -176,9 +178,11 @@ a {
 }
 
 .center-state img {
+  display: block;
   width: 96px;
   height: 96px;
   border-radius: 8px;
+  object-fit: contain;
 }
 
 .center-state p {
