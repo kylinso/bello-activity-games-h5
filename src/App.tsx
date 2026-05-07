@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { ActivityApi } from '@/api/activityApi';
 import { AdBanner } from '@/components/AdBanner';
+import { AttractScreen } from '@/components/AttractScreen';
 import { BingoGame } from '@/components/BingoGame';
 import { BlockingState } from '@/components/BlockingState';
 import { DiamondRainGame } from '@/components/DiamondRainGame';
@@ -59,7 +60,7 @@ const App = () => {
   const locale = normalizeLocale(i18n.language);
 
   const [config, setConfig] = useState<ActivityConfig | null>(null);
-  const [screen, setScreen] = useState<ScreenState>('home');
+  const [screen, setScreen] = useState<ScreenState>('attract');
   const [playId, setPlayId] = useState('');
   const [lockedGameType, setLockedGameType] = useState<GameType | null>(null);
   const [startingGame, setStartingGame] = useState<GameType | null>(null);
@@ -195,11 +196,21 @@ const App = () => {
   }
 
   const isGameRunning = screen === 'bingo' || screen === 'diamond_rain';
+  const shellClassName = isGameRunning
+    ? 'app-shell is-game-running'
+    : screen === 'attract'
+      ? 'app-shell is-attract'
+      : 'app-shell';
 
   return (
-    <div className={isGameRunning ? 'app-shell is-game-running' : 'app-shell'}>
+    <div className={shellClassName}>
       <FxLayer />
-      <HeaderBar lockedLabel={lockedLabel} sessionId={config.sessionId} />
+      {screen === 'attract' ? null : (
+        <HeaderBar lockedLabel={lockedLabel} sessionId={config.sessionId} />
+      )}
+      {screen === 'attract' ? (
+        <AttractScreen config={config} onEnter={() => setScreen('home')} />
+      ) : null}
       {screen === 'home' ? (
         <HomeScreen
           config={config}
