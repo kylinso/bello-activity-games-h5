@@ -164,16 +164,12 @@ const GameChoiceCard = ({
 
 interface HomeScreenProps {
   config: ActivityConfig;
-  lockedGameType?: GameType | null;
   onStart: (gameType: GameType) => void;
-  startingGame?: GameType | null;
 }
 
 export const HomeScreen = ({
   config,
-  lockedGameType,
   onStart,
-  startingGame,
 }: HomeScreenProps) => {
   const { t } = useTranslation();
   const [activeDemo, setActiveDemo] = useState<GameType>('bingo');
@@ -188,9 +184,9 @@ export const HomeScreen = ({
       <DemoStage config={config} activeGame={activeDemo} onActiveGameChange={setActiveDemo} />
       <section className="choice-grid">
         <GameChoiceCard
-          buttonLabel={startingGame === 'bingo' ? t('loading') : t('playBingo')}
+          buttonLabel={t('playBingo')}
           description={t('bingoDescription')}
-          disabled={Boolean(startingGame || (lockedGameType && lockedGameType !== 'bingo'))}
+          disabled={false}
           gameType="bingo"
           isActive={activeDemo === 'bingo'}
           onSelect={onStart}
@@ -199,11 +195,9 @@ export const HomeScreen = ({
           visualSecondary={`${config.bingo.picksAllowed} Picks`}
         />
         <GameChoiceCard
-          buttonLabel={startingGame === 'diamond_rain' ? t('loading') : t('playDiamond')}
+          buttonLabel={t('playDiamond')}
           description={t('diamondDescription')}
-          disabled={Boolean(
-            startingGame || (lockedGameType && lockedGameType !== 'diamond_rain'),
-          )}
+          disabled={false}
           gameType="diamond_rain"
           isActive={activeDemo === 'diamond_rain'}
           onSelect={onStart}

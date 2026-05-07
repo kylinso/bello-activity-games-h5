@@ -32,6 +32,8 @@ export interface DiamondRainConfig {
   minScore: number;
   fallSpeedMinMs: number;
   fallSpeedMaxMs: number;
+  normalIcon?: string;
+  bombIcon?: string;
 }
 
 export interface ActivityConfig {
@@ -44,12 +46,10 @@ export interface ActivityConfig {
   bingo: BingoConfig;
   diamondRain: DiamondRainConfig;
   banners: BannerItem[];
-}
-
-export interface GameSession {
-  playId: string;
-  lockedGameType: GameType;
-  status: 'started' | 'already_played';
+  common?: {
+    dailyUserTotalLimit?: number;
+    qrExpireMinutes?: number;
+  };
 }
 
 export interface BingoClientResult {
@@ -75,6 +75,8 @@ export interface RewardResult {
   rewardType: RewardType;
   rewardAmount: number;
   rewardDisplayText: string;
+  prizeRecordId?: number | string;
+  claimToken?: string;
   rewardCode: string;
   qrUrl: string;
   expiresAt: string;

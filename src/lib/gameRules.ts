@@ -94,16 +94,21 @@ export const normalizeDiamondResult = (
 export const buildRewardQrUrl = ({
   registerH5Url,
   rewardCode,
+  claimToken,
   sessionId,
   activityId,
 }: {
   registerH5Url: string;
   rewardCode: string;
+  claimToken?: string;
   sessionId: string;
   activityId: string;
 }) => {
   const url = new URL(registerH5Url, window.location.origin);
   url.searchParams.set('rewardCode', rewardCode);
+  if (claimToken) {
+    url.searchParams.set('claimToken', claimToken);
+  }
   url.searchParams.set('sessionId', sessionId);
   url.searchParams.set('activityId', activityId);
   return url.toString();

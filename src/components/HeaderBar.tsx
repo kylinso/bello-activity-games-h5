@@ -4,10 +4,10 @@ import { LanguageSwitch } from './LanguageSwitch';
 
 interface HeaderBarProps {
   sessionId: string;
-  lockedLabel?: string;
+  storeName?: string;
 }
 
-export const HeaderBar = ({ sessionId, lockedLabel }: HeaderBarProps) => {
+export const HeaderBar = ({ sessionId, storeName }: HeaderBarProps) => {
   const { t } = useTranslation();
 
   return (
@@ -16,11 +16,12 @@ export const HeaderBar = ({ sessionId, lockedLabel }: HeaderBarProps) => {
         <img alt="" className="brand-mark" src={belloMark} />
         <div>
           <p>{t('appName')}</p>
-          <strong>{t('session')}: {sessionId || '-'}</strong>
+          <strong>
+            {storeName ? `${t('store')}: ${storeName}` : `${t('session')}: ${sessionId || '-'}`}
+          </strong>
         </div>
       </div>
       <div className="header-actions">
-        {lockedLabel ? <span className="lock-pill">{lockedLabel}</span> : null}
         <LanguageSwitch />
       </div>
     </header>

@@ -3,16 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { FaArrowLeft, FaGem } from 'react-icons/fa';
 import { ActivityApi } from '@/api/activityApi';
 import { createBingoGrid, formatCurrency, getBingoTotal } from '@/lib/gameRules';
+import { getRequestErrorMessage } from '@/lib/requestErrors';
 import type { ActivityConfig, BingoClientResult, RewardResult } from '@/types/activity';
 
 interface BingoGameProps {
   config: ActivityConfig;
   playId: string;
   onComplete: (result: RewardResult) => void;
+  onError: (message: string) => void;
   onBack: () => void;
 }
 
-export const BingoGame = ({ config, playId, onComplete, onBack }: BingoGameProps) => {
+export const BingoGame = ({ config, playId, onComplete, onError, onBack }: BingoGameProps) => {
   const { t, i18n } = useTranslation();
   const [grid, setGrid] = useState(() => createBingoGrid(config.bingo));
   const [selectedCells, setSelectedCells] = useState<BingoClientResult['selectedCells']>([]);
@@ -40,8 +42,10 @@ export const BingoGame = ({ config, playId, onComplete, onBack }: BingoGameProps
         },
       });
       onComplete(result);
-    } catch {
-      setError(t('startFailed'));
+    } catch (requestError) {
+      const message = getRequestErrorMessage(requestError, t('startFailed'));
+      setError(message);
+      onError(message);
       setIsSubmitting(false);
     }
   };

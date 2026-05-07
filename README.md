@@ -5,7 +5,7 @@ Bello offline activity game station H5. The page is designed for tablet and mobi
 ## Features
 
 - Home screen with looping auto demo: Bingo demo and Diamond Rain demo rotate automatically.
-- One-session-one-game lock: after a session starts one game, the other game cannot be played.
+- Game selection starts immediately. Backend validation is handled when config and result APIs are called.
 - Bingo Bonus Pool: 3 x 3 grid, pick 3 tiles, default prize pool is `5 x SGD 3 + 3 x SGD 4 + 1 x SGD 5`.
 - Diamond Rain: default 10 seconds, 15 diamonds worth `+1`, 10 bombs worth `-1`, final score is never lower than 0.
 - Reward result page: generates a unique reward code and QR code for registration and reward claim.
@@ -73,14 +73,14 @@ Available variables:
 
 ```bash
 VITE_API_BASE_URL=/api
-VITE_USE_MOCKS=true
+VITE_USE_MOCKS=false
 VITE_DEFAULT_REGISTER_H5_URL=https://bello.example.com/register
 ```
 
 | Variable | Description |
 | --- | --- |
 | `VITE_API_BASE_URL` | Backend API base URL. |
-| `VITE_USE_MOCKS` | Uses local mock API unless set to `false`. |
+| `VITE_USE_MOCKS` | Uses the real API by default. Set to `true` only for local mock preview. |
 | `VITE_DEFAULT_REGISTER_H5_URL` | Registration H5 URL used by mock mode and QR generation fallback. |
 
 ## Game Rules
@@ -130,31 +130,29 @@ max(minScore, diamonds * diamondValue + bombs * bombValue)
 1. App reads `activityId`, `sessionId`, and current locale.
 2. App loads activity config from API or mock API.
 3. Home screen shows game choices and auto demo.
-4. User starts either Bingo or Diamond Rain.
-5. Backend locks the session to the selected game.
-6. User completes the game.
-7. App submits the client result.
-8. Backend returns reward amount, reward code, QR URL, and expiry time.
-9. Result screen displays QR code.
-10. User scans QR code and continues through registration H5.
+4. User chooses either Bingo or Diamond Rain and starts playing immediately.
+5. User completes the game.
+6. App submits the client result.
+7. Backend validates eligibility and returns reward amount, reward code, QR URL, and expiry time.
+8. Result screen displays QR code.
+9. User scans QR code and continues through registration H5.
 
 ## API Contract
 
-When `VITE_USE_MOCKS=false`, the app uses the following endpoints.
+By default, the app uses the following endpoints. Set `VITE_USE_MOCKS=true` only for local mock preview.
 
-### Get Activity Config
+### Get Game Config
 
 ```http
-GET /api/activity-games/config
+GET /api/merchant/global/config
 ```
 
 Query params:
 
 ```ts
 {
-  activityId: string;
-  sessionId: string;
-  locale: 'en' | 'zh' | 'ms';
+  storeId: string;
+  keys: 'PAD_GAME_COMMON_CONFIG,PAD_DIAMOND_RAIN_CONFIG,PAD_BINGO_CONFIG';
 }
 ```
 
@@ -162,89 +160,37 @@ Response:
 
 ```ts
 {
-  activityId: string;
-  sessionId: string;
-  status: 'active' | 'inactive';
-  rewardType: 'cash_voucher' | 'coupon' | 'bello_points';
-  registerH5Url: string;
-  locale: 'en' | 'zh' | 'ms';
-  bingo: {
-    gridSize: number;
-    picksAllowed: number;
-    currency: string;
-    minReward: number;
-    maxReward: number;
-    pool: number[];
+  PAD_GAME_COMMON_CONFIG: {
+    dailyUserTotalLimit: number;
+    qrExpireMinutes: number;
   };
-  diamondRain: {
-    durationSeconds: number;
+  PAD_DIAMOND_RAIN_CONFIG: {
     diamondCount: number;
     bombCount: number;
-    diamondValue: number;
-    bombValue: number;
-    minScore: number;
-    fallSpeedMinMs: number;
-    fallSpeedMaxMs: number;
+    gameTimeSeconds: number;
+    normalIcon: string;
+    bombIcon: string;
   };
-  banners: Array<{
-    id: string;
-    title: string;
-    subtitle: string;
-    imageUrl?: string;
-    linkUrl?: string;
-  }>;
-}
-```
-
-### Start Game
-
-```http
-POST /api/activity-games/session/start
-```
-
-Request:
-
-```ts
-{
-  activityId: string;
-  sessionId: string;
-  gameType: 'bingo' | 'diamond_rain';
-}
-```
-
-Response:
-
-```ts
-{
-  playId: string;
-  lockedGameType: 'bingo' | 'diamond_rain';
-  status: 'started' | 'already_played';
+  PAD_BINGO_CONFIG: {
+    scoreBuckets: Array<{ score: number; count: number }>;
+  };
 }
 ```
 
 ### Submit Result
 
 ```http
-POST /api/activity-games/session/result
+POST /api/merchant/pad-game/prize/upload
 ```
 
 Request:
 
 ```ts
 {
-  playId: string;
-  gameType: 'bingo' | 'diamond_rain';
-  clientResult:
-    | {
-        selectedCells: Array<{ index: number; amount: number }>;
-        durationMs: number;
-      }
-    | {
-        diamonds: number;
-        bombs: number;
-        finalScore: number;
-        durationMs: number;
-      };
+  // 1 = Diamond Rain, 2 = Bingo
+  gameType: 1 | 2;
+  score: number;
+  storeId: string;
 }
 ```
 
@@ -252,14 +198,13 @@ Response:
 
 ```ts
 {
-  playId: string;
-  gameType: 'bingo' | 'diamond_rain';
-  rewardType: 'cash_voucher' | 'coupon' | 'bello_points';
-  rewardAmount: number;
-  rewardDisplayText: string;
-  rewardCode: string;
-  qrUrl: string;
-  expiresAt: string;
+  code: 0;
+  msg: string;
+  data: {
+    prizeRecordId: number;
+    claimToken: string;
+    expireTime: string;
+  };
 }
 ```
 
@@ -297,19 +242,19 @@ src/
 
 ## Local State
 
-The mock flow stores the current session play state in `localStorage`:
+The H5 stores login state and the selected store in `localStorage`:
 
 ```text
-bello-activity:{activityId}:{sessionId}:play
+bello-activity:auth
 ```
 
-This keeps the one-game-only behavior after page refresh. In production, the backend should be the source of truth for session locking and reward claim state.
+Game eligibility and reward claim state are handled by backend APIs. Choosing a game does not create a frontend session lock.
 
 ## Deployment Notes
 
 - Build output is generated in `dist/`.
 - `dist/` is ignored by Git and should be produced by the deployment pipeline.
-- Configure `VITE_USE_MOCKS=false` for real backend integration.
+- Keep `VITE_USE_MOCKS=false` or unset for real backend integration.
 - Configure `VITE_API_BASE_URL` to point to the deployed API gateway.
 - Configure `VITE_DEFAULT_REGISTER_H5_URL` or return `registerH5Url` from the backend config.
 
@@ -318,9 +263,9 @@ This keeps the one-game-only behavior after page refresh. In production, the bac
 - Home page can scroll on mobile.
 - Home page auto demo rotates between Bingo and Diamond Rain.
 - Bottom banner is visible on home and hidden during games.
-- A session can play only one game.
+- Choosing a game starts it without calling a start-session API.
 - Bingo allows exactly 3 tile picks.
 - Diamond Rain score never goes below 0.
 - Result page shows reward amount, reward code, QR code, and expiry time.
-- QR code opens the registration H5 URL with `rewardCode`, `sessionId`, and `activityId`.
+- QR code opens the registration H5 URL with `claimToken`, `rewardCode`, `sessionId`, and `activityId`.
 - `npm run build` completes successfully.

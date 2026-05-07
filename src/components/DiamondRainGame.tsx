@@ -5,6 +5,7 @@ import { ActivityApi } from '@/api/activityApi';
 import bombAsset from '@/assets/bomb.svg';
 import diamondAsset from '@/assets/diamond.svg';
 import { getDiamondRainScore, normalizeDiamondResult } from '@/lib/gameRules';
+import { getRequestErrorMessage } from '@/lib/requestErrors';
 import type {
   ActivityConfig,
   DiamondRainClientResult,
@@ -15,6 +16,7 @@ interface DiamondRainGameProps {
   config: ActivityConfig;
   playId: string;
   onComplete: (result: RewardResult) => void;
+  onError: (message: string) => void;
   onBack: () => void;
 }
 
@@ -70,6 +72,7 @@ export const DiamondRainGame = ({
   config,
   playId,
   onComplete,
+  onError,
   onBack,
 }: DiamondRainGameProps) => {
   const { t } = useTranslation();
@@ -87,6 +90,8 @@ export const DiamondRainGame = ({
   const durationMs = config.diamondRain.durationSeconds * 1000;
   const remainingSeconds = Math.max(0, Math.ceil((durationMs - elapsedMs) / 1000));
   const score = getDiamondRainScore(diamonds, bombs, config.diamondRain);
+  const normalIcon = config.diamondRain.normalIcon || diamondAsset;
+  const bombIcon = config.diamondRain.bombIcon || bombAsset;
 
   const resultPayload = useMemo<DiamondRainClientResult>(
     () =>
@@ -106,15 +111,19 @@ export const DiamondRainGame = ({
     let raf = 0;
 
     const tick = () => {
-      setElapsedMs(performance.now() - startTime.current);
-      raf = window.requestAnimationFrame(tick);
+      const nextElapsedMs = performance.now() - startTime.current;
+      setElapsedMs(Math.min(nextElapsedMs, durationMs));
+
+      if (nextElapsedMs < durationMs) {
+        raf = window.requestAnimationFrame(tick);
+      }
     };
 
     raf = window.requestAnimationFrame(tick);
     return () => {
       window.cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [durationMs]);
 
   useEffect(() => {
     if (elapsedMs < durationMs || submitted.current) {
@@ -131,12 +140,13 @@ export const DiamondRainGame = ({
       clientResult: resultPayload,
     })
       .then(onComplete)
-      .catch(() => {
-        submitted.current = false;
-        setError(t('startFailed'));
+      .catch((requestError) => {
+        const message = getRequestErrorMessage(requestError, t('startFailed'));
+        setError(message);
+        onError(message);
         setIsSubmitting(false);
       });
-  }, [config, durationMs, elapsedMs, onComplete, playId, resultPayload, t]);
+  }, [config, durationMs, elapsedMs, onComplete, onError, playId, resultPayload, t]);
 
   useEffect(() => {
     if (!scorePulse) {
@@ -235,7 +245,7 @@ export const DiamondRainGame = ({
               }}
               type="button"
             >
-              <img alt="" src={item.type === 'diamond' ? diamondAsset : bombAsset} />
+              <img alt="" src={item.type === 'diamond' ? normalIcon : bombIcon} />
             </button>
           );
         })}

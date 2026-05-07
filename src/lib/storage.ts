@@ -1,36 +1,51 @@
-import type { GameType, RewardResult } from '@/types/activity';
+import type { StoredAuthState, StoreProfile } from '@/types/auth';
 
-const getPlayKey = (activityId: string, sessionId: string) => {
-  return `bello-activity:${activityId}:${sessionId}:play`;
-};
+const AUTH_KEY = 'bello-activity:auth';
 
-export interface StoredPlayState {
-  gameType: GameType;
-  result?: RewardResult;
-}
-
-export const readStoredPlayState = (activityId: string, sessionId: string) => {
-  const raw = window.localStorage.getItem(getPlayKey(activityId, sessionId));
+export const readStoredAuthState = () => {
+  const raw = window.localStorage.getItem(AUTH_KEY);
   if (!raw) {
     return null;
   }
 
   try {
-    return JSON.parse(raw) as StoredPlayState;
+    return JSON.parse(raw) as StoredAuthState;
   } catch {
-    window.localStorage.removeItem(getPlayKey(activityId, sessionId));
+    window.localStorage.removeItem(AUTH_KEY);
     return null;
   }
 };
 
-export const writeStoredPlayState = (
-  activityId: string,
-  sessionId: string,
-  state: StoredPlayState,
-) => {
-  window.localStorage.setItem(getPlayKey(activityId, sessionId), JSON.stringify(state));
+export const hasUsableAuthState = (state: StoredAuthState | null) => {
+  if (!state?.token) {
+    return false;
+  }
+
+  if (!state.tokenExpiresAt) {
+    return true;
+  }
+
+  return new Date(state.tokenExpiresAt).getTime() > Date.now();
 };
 
-export const clearStoredPlayState = (activityId: string, sessionId: string) => {
-  window.localStorage.removeItem(getPlayKey(activityId, sessionId));
+export const writeStoredAuthState = (state: StoredAuthState) => {
+  window.localStorage.setItem(AUTH_KEY, JSON.stringify(state));
+};
+
+export const selectStoredStore = (store: StoreProfile) => {
+  const current = readStoredAuthState();
+  if (!current) {
+    return null;
+  }
+
+  const nextState = {
+    ...current,
+    selectedStore: store,
+  };
+  writeStoredAuthState(nextState);
+  return nextState;
+};
+
+export const clearStoredAuthState = () => {
+  window.localStorage.removeItem(AUTH_KEY);
 };

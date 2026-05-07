@@ -1,6 +1,6 @@
 import { buildRewardQrUrl, createRewardCode, formatCurrency, getBingoTotal, getDiamondRainScore } from '@/lib/gameRules'
-import { readStoredPlayState, writeStoredPlayState } from '@/lib/storage'
-import type { ActivityConfig, BannerEventType, BingoClientResult, DiamondRainClientResult, GameClientResult, GameSession, GameType, Locale, RewardResult } from '@/types/activity'
+import type { ActivityConfig, BannerEventType, BingoClientResult, DiamondRainClientResult, GameClientResult, GameType, Locale, RewardResult } from '@/types/activity'
+import type { LoginCodeRequest, LoginResponse, LoginWithCodeRequest, LoginWithPasswordRequest, StoreProfile } from '@/types/auth'
 
 const delay = async (durationMs = 280) => {
   await new Promise((resolve) => {
@@ -30,6 +30,46 @@ const getBannerCopy = (locale: Locale) => {
     ['Nearby deals', 'Food, retail, and lifestyle offers'],
     ['Bello Points', 'Play activities and collect more BP'],
   ]
+}
+
+const mockStores: StoreProfile[] = [
+  {
+    id: 'store-kuala-lumpur-01',
+    name: 'Bello Kuala Lumpur Demo Store',
+    countryCity: 'Malaysia / Kuala Lumpur',
+    address: 'Lot G-12, Bello Mall, Jalan Ampang, 50450 Kuala Lumpur',
+    activityId: 'bello-tablet-demo',
+    sessionId: 'STORE-KL-01',
+  },
+  {
+    id: 'store-petaling-jaya-02',
+    name: 'Bello Petaling Jaya Demo Store',
+    countryCity: 'Malaysia / Petaling Jaya',
+    address: 'No. 18, Jalan SS2/24, 47300 Petaling Jaya, Selangor',
+    activityId: 'bello-tablet-demo',
+    sessionId: 'STORE-PJ-02',
+  },
+  {
+    id: 'store-johor-bahru-03',
+    name: 'Bello Johor Bahru Demo Store',
+    countryCity: 'Malaysia / Johor Bahru',
+    address: 'Level 2, Bello Square, Jalan Wong Ah Fook, 80000 Johor Bahru',
+    activityId: 'bello-tablet-demo',
+    sessionId: 'STORE-JB-03',
+  },
+]
+
+const createMockLoginResponse = (
+  params: LoginWithCodeRequest | LoginWithPasswordRequest,
+): LoginResponse => {
+  return {
+    token: `mock-token-${params.phone}-${Date.now()}`,
+    tokenExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
+    countryCode: params.countryCode,
+    phone: params.phone,
+    stores: mockStores,
+    activityId: 'bello-tablet-demo',
+  }
 }
 
 export const createMockConfig = ({ activityId, sessionId, locale }: { activityId: string; sessionId: string; locale: Locale }): ActivityConfig => {
@@ -92,36 +132,44 @@ const getRewardAmount = (config: ActivityConfig, gameType: GameType, result: Gam
 }
 
 export const mockApi = {
+  async sendLoginCode(_params: LoginCodeRequest) {
+    await delay()
+  },
+
+  async loginWithCode(params: LoginWithCodeRequest): Promise<LoginResponse> {
+    await delay(420)
+
+    if (!params.phone || !params.verificationCode) {
+      throw {
+        code: 'LOGIN_FAILED',
+        message: 'Phone number and verification code are required.',
+      }
+    }
+
+    return createMockLoginResponse(params)
+  },
+
+  async loginWithPassword(params: LoginWithPasswordRequest): Promise<LoginResponse> {
+    await delay(420)
+
+    if (!params.phone || !params.password) {
+      throw {
+        code: 'LOGIN_FAILED',
+        message: 'Phone number and password are required.',
+      }
+    }
+
+    return createMockLoginResponse(params)
+  },
+
+  async getMerchantStores(): Promise<StoreProfile[]> {
+    await delay()
+    return mockStores
+  },
+
   async getConfig(params: { activityId: string; sessionId: string; locale: Locale }): Promise<ActivityConfig> {
     await delay()
     return createMockConfig(params)
-  },
-
-  async startGame(config: ActivityConfig, gameType: GameType): Promise<GameSession> {
-    await delay()
-    const stored = readStoredPlayState(config.activityId, config.sessionId)
-
-    if (stored?.result) {
-      throw {
-        code: 'ALREADY_PLAYED',
-        message: 'This session has already played a game.',
-      }
-    }
-
-    if (stored && stored.gameType !== gameType) {
-      throw {
-        code: 'ALREADY_PLAYED',
-        message: 'This session is locked to another game.',
-      }
-    }
-
-    writeStoredPlayState(config.activityId, config.sessionId, { gameType })
-
-    return {
-      playId: `mock-${config.sessionId}-${Date.now()}`,
-      lockedGameType: gameType,
-      status: 'started',
-    }
   },
 
   async submitResult({ config, playId, gameType, clientResult }: { config: ActivityConfig; playId: string; gameType: GameType; clientResult: GameClientResult }): Promise<RewardResult> {
@@ -142,11 +190,6 @@ export const mockApi = {
       }),
       expiresAt: new Date(Date.now() + 1000 * 60 * 30).toISOString(),
     }
-
-    writeStoredPlayState(config.activityId, config.sessionId, {
-      gameType,
-      result,
-    })
 
     return result
   },
