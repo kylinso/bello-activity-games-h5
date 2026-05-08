@@ -69,6 +69,12 @@ export interface DiamondRainClientResult {
 
 export type GameClientResult = BingoClientResult | DiamondRainClientResult;
 
+export interface CompletedGamePayload {
+  gameType: GameType;
+  clientResult: GameClientResult;
+  rewardAmount: number;
+}
+
 export interface RewardResult {
   playId: string;
   gameType: GameType;

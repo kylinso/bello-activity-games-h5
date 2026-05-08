@@ -6,15 +6,18 @@ import { AdBanner } from '@/components/AdBanner';
 import { AttractScreen } from '@/components/AttractScreen';
 import { BingoGame } from '@/components/BingoGame';
 import { BlockingState } from '@/components/BlockingState';
+import { CompletionClaimModal } from '@/components/CompletionClaimModal';
 import { DiamondRainGame } from '@/components/DiamondRainGame';
 import { FxLayer } from '@/components/FxLayer';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HomeScreen } from '@/components/DemoStage';
 import { LoadingState } from '@/components/LoadingState';
 import { ResultScreen } from '@/components/ResultScreen';
+import { getRequestErrorMessage } from '@/lib/requestErrors';
 import { readStoredAuthState } from '@/lib/storage';
 import type {
   ActivityConfig,
+  CompletedGamePayload,
   GameType,
   Locale,
   RewardResult,
@@ -74,10 +77,12 @@ export const GamePage = () => {
   const [config, setConfig] = useState<ActivityConfig | null>(null);
   const [screen, setScreen] = useState<ScreenState>('attract');
   const [playId, setPlayId] = useState('');
+  const [completedGame, setCompletedGame] = useState<CompletedGamePayload | null>(null);
   const [rewardResult, setRewardResult] = useState<RewardResult | null>(null);
   const [error, setError] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isClaimSubmitting, setIsClaimSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +151,9 @@ export const GamePage = () => {
 
       setError('');
       setToastMessage('');
+      setCompletedGame(null);
+      setRewardResult(null);
+      setIsClaimSubmitting(false);
       setPlayId(`${config.sessionId}-${gameType}-${Date.now()}`);
       setScreen(gameType);
     },
@@ -153,17 +161,41 @@ export const GamePage = () => {
   );
 
   const completeGame = useCallback(
-    (result: RewardResult) => {
+    (result: CompletedGamePayload) => {
       if (!config) {
         return;
       }
 
-      setRewardResult(result);
+      setCompletedGame(result);
       setToastMessage('');
-      setScreen('result');
     },
     [config],
   );
+
+  const claimReward = useCallback(async () => {
+    if (!config || !completedGame || !playId || isClaimSubmitting) {
+      return;
+    }
+
+    setIsClaimSubmitting(true);
+    setToastMessage('');
+
+    try {
+      const result = await ActivityApi.submitResult({
+        config,
+        playId,
+        gameType: completedGame.gameType,
+        clientResult: completedGame.clientResult,
+      });
+      setRewardResult(result);
+      setCompletedGame(null);
+      setScreen('result');
+    } catch (requestError) {
+      setToastMessage(getRequestErrorMessage(requestError, t('startFailed')));
+    } finally {
+      setIsClaimSubmitting(false);
+    }
+  }, [completedGame, config, isClaimSubmitting, playId, t]);
 
   const showGameError = useCallback((message: string) => {
     setToastMessage(message);
@@ -198,12 +230,16 @@ export const GamePage = () => {
     ? 'app-shell is-game-running'
     : screen === 'attract'
       ? 'app-shell is-attract'
-      : 'app-shell';
+      : screen === 'result'
+        ? 'app-shell is-result'
+        : screen === 'home'
+          ? 'app-shell is-home-selection'
+          : 'app-shell';
 
   return (
     <div className={shellClassName}>
       <FxLayer />
-      {screen === 'attract' ? null : (
+      {screen === 'attract' || isGameRunning || screen === 'result' || screen === 'home' ? null : (
         <HeaderBar
           sessionId={config.sessionId}
           storeName={selectedStore?.name}
@@ -213,7 +249,7 @@ export const GamePage = () => {
         <AttractScreen config={config} onEnter={() => setScreen('home')} />
       ) : null}
       {screen === 'home' ? (
-        <HomeScreen config={config} onStart={startGame} />
+        <HomeScreen config={config} onBack={() => setScreen('attract')} onStart={startGame} />
       ) : null}
       {screen === 'bingo' && playId ? (
         <BingoGame
@@ -234,6 +270,14 @@ export const GamePage = () => {
         />
       ) : null}
       {screen === 'result' && rewardResult ? <ResultScreen result={rewardResult} /> : null}
+      {completedGame ? (
+        <CompletionClaimModal
+          completedGame={completedGame}
+          config={config}
+          isSubmitting={isClaimSubmitting}
+          onClaim={claimReward}
+        />
+      ) : null}
       {screen === 'home' ? <AdBanner config={config} /> : null}
       {toastMessage ? <div className="toast-error">{toastMessage}</div> : null}
     </div>

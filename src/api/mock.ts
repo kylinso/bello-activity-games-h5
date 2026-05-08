@@ -175,6 +175,12 @@ export const mockApi = {
   async submitResult({ config, playId, gameType, clientResult }: { config: ActivityConfig; playId: string; gameType: GameType; clientResult: GameClientResult }): Promise<RewardResult> {
     await delay(460)
     const rewardCode = createRewardCode(gameType)
+    const qrUrl = buildRewardQrUrl({
+      registerH5Url: config.registerH5Url,
+      rewardCode,
+      sessionId: config.sessionId,
+      activityId: config.activityId,
+    })
     const result: RewardResult = {
       playId,
       gameType,
@@ -182,12 +188,8 @@ export const mockApi = {
       rewardAmount: getRewardAmount(config, gameType, clientResult),
       rewardDisplayText: getRewardDisplayText(config, gameType, clientResult),
       rewardCode,
-      qrUrl: buildRewardQrUrl({
-        registerH5Url: config.registerH5Url,
-        rewardCode,
-        sessionId: config.sessionId,
-        activityId: config.activityId,
-      }),
+      claimToken: qrUrl,
+      qrUrl,
       expiresAt: new Date(Date.now() + 1000 * 60 * 30).toISOString(),
     }
 

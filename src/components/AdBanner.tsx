@@ -38,6 +38,7 @@ export const AdBanner = ({ config }: AdBannerProps) => {
 
   return (
     <aside className="ad-banner" aria-label={t('bannerLabel')}>
+      <span className="home-partner-label">{t('partnerTitle')}</span>
       <div className="banner-track">
         {items.map((banner, index) => {
           const Icon = bannerIcons[index % bannerIcons.length];

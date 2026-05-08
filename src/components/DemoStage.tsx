@@ -1,210 +1,134 @@
-import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaBomb, FaCoins, FaGem, FaGift, FaPlay, FaTicketAlt } from 'react-icons/fa';
-import bingoPrize from '@/assets/bingo-prize.svg';
-import rainPrize from '@/assets/rain-prize.svg';
 import type { ActivityConfig, GameType } from '@/types/activity';
 
-interface DemoStageProps {
-  config: ActivityConfig;
-  activeGame: GameType;
-  onActiveGameChange: (gameType: GameType) => void;
-}
-
-export const DemoStage = ({ config, activeGame, onActiveGameChange }: DemoStageProps) => {
-  const { t } = useTranslation();
-  const bingoPreview = useMemo(() => config.bingo.pool.slice(0, 9), [config.bingo.pool]);
-  const hiddenIcons = [FaTicketAlt, FaCoins, FaGem, FaGift];
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      onActiveGameChange(activeGame === 'bingo' ? 'diamond_rain' : 'bingo');
-    }, 5600);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, [activeGame, onActiveGameChange]);
-
-  return (
-    <section className="demo-stage">
-      <div className="demo-sheen" aria-hidden="true" />
-      <div className="section-eyebrow">{t('demo')}</div>
-      {activeGame === 'bingo' ? (
-        <div className="demo-bingo" aria-label={t('bingoTitle')}>
-          <div className="demo-jackpot-card" aria-hidden="true">
-            <span>BINGO</span>
-            <strong>{config.bingo.currency} 32</strong>
-            <small>Prize Pool</small>
-          </div>
-          <div className="demo-prize-ribbon" aria-hidden="true">
-            <FaGift />
-            <span>{config.bingo.picksAllowed} Picks</span>
-          </div>
-          {bingoPreview.map((amount, index) => (
-            <div
-              className={index < 3 ? 'demo-tile is-revealed' : 'demo-tile is-hidden'}
-              key={index}
-            >
-              {index < 3 ? (
-                <>
-                  <span className="demo-prize-ticket">
-                    <FaTicketAlt aria-hidden="true" />
-                    <strong>{`${config.bingo.currency} ${amount}`}</strong>
-                    <small>Lucky Tile</small>
-                  </span>
-                  <i aria-hidden="true" />
-                  <b aria-hidden="true" />
-                </>
-              ) : (
-                <>
-                  <span className="demo-hidden-symbol">
-                    {(() => {
-                      const HiddenIcon = hiddenIcons[index % hiddenIcons.length];
-                      return <HiddenIcon aria-hidden="true" />;
-                    })()}
-                  </span>
-                  <span className="demo-question">?</span>
-                </>
-              )}
-            </div>
-          ))}
-          <div className="demo-hand" aria-hidden="true" />
-        </div>
-      ) : (
-        <div className="demo-rain" aria-label={t('diamondTitle')}>
-          <div className="demo-score-badge">+8</div>
-          {Array.from({ length: 14 }).map((_, index) => {
-            const isBomb = index % 5 === 0;
-            return (
-              <span
-                className={isBomb ? 'demo-drop is-bomb' : 'demo-drop'}
-                key={index}
-                style={{
-                  left: `${8 + ((index * 13) % 84)}%`,
-                  animationDelay: `${(index % 7) * 0.32}s`,
-                  animationDuration: `${2.4 + (index % 4) * 0.38}s`,
-                }}
-              >
-                {isBomb ? <FaBomb aria-hidden="true" /> : <FaGem aria-hidden="true" />}
-              </span>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
-};
-
 interface GameChoiceCardProps {
+  config: ActivityConfig;
   gameType: GameType;
-  title: string;
-  description: string;
-  buttonLabel: string;
-  isActive: boolean;
-  disabled: boolean;
-  visualPrimary: string;
-  visualSecondary: string;
+  isPrimary?: boolean;
   onSelect: (gameType: GameType) => void;
 }
 
-const GameChoiceCard = ({
-  gameType,
-  title,
-  description,
-  buttonLabel,
-  isActive,
-  disabled,
-  visualPrimary,
-  visualSecondary,
-  onSelect,
-}: GameChoiceCardProps) => {
-  const [isPressed, setIsPressed] = useState(false);
-  const Icon = gameType === 'bingo' ? FaGem : FaBomb;
-  const visualAsset = gameType === 'bingo' ? bingoPrize : rainPrize;
+const bingoDemoAmounts = [2, 0, 0, 0, 0, 0, 0, 0, 0];
+const rainDrops = [
+  { left: 21, top: 22, type: 'gem', delay: '-0.1s' },
+  { left: 68, top: 12, type: 'gem', delay: '-0.7s' },
+  { left: 23, top: 64, type: 'gem', delay: '-1.3s' },
+  { left: 51, top: 77, type: 'gem', delay: '-1.9s' },
+  { left: 77, top: 57, type: 'gem', delay: '-2.5s' },
+  { left: 82, top: 89, type: 'gem', delay: '-3.1s' },
+  { left: 34, top: 92, type: 'bomb', delay: '-1.1s' },
+];
+
+const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCardProps) => {
+  const { t } = useTranslation();
+  const isBingo = gameType === 'bingo';
+  const rewardScope = isBingo
+    ? `${config.bingo.currency} ${config.bingo.minReward}-${config.bingo.maxReward}`
+    : `${config.bingo.currency} ${config.diamondRain.minScore}-${Math.max(
+        config.diamondRain.minScore,
+        config.diamondRain.diamondCount * config.diamondRain.diamondValue,
+      )}`;
+  const metricValue = isBingo ? config.bingo.picksAllowed : 3;
+  const metricLabel = isBingo ? t('chances') : t('secondsUnit');
 
   return (
-    <article className={isActive ? 'choice-card is-active' : 'choice-card'}>
-      <div className="choice-card-top">
-        <div className="choice-icon">
-          <Icon aria-hidden="true" />
-        </div>
-        <div className="choice-mini-board" aria-hidden="true">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <span key={index} />
-          ))}
-        </div>
+    <button
+      className={isPrimary ? 'choice-game-card is-primary' : 'choice-game-card'}
+      onClick={() => onSelect(gameType)}
+      type="button"
+    >
+      <div className="choice-game-header">
+        <span className={isBingo ? 'choice-game-icon is-bingo' : 'choice-game-icon'}>
+          <img alt="" src={isBingo ? '/bingo/frequency.webp' : '/diamond/gem.svg'} />
+        </span>
+        <span className="choice-game-title">
+          <strong>{isBingo ? 'Bingo' : t('diamondTitle')}</strong>
+          <small>{isBingo ? '3 Picks · 3 Chances' : '10 s · Catch & Dodge'}</small>
+        </span>
       </div>
-      <div className={gameType === 'bingo' ? 'choice-visual' : 'choice-visual is-rain'}>
-        <img alt="" src={visualAsset} />
-        <span className="visual-chip visual-chip-a">{visualPrimary}</span>
-        <span className="visual-chip visual-chip-b">{visualSecondary}</span>
-        <i aria-hidden="true" />
-        <b aria-hidden="true" />
+
+      <div className={isBingo ? 'choice-live-preview is-bingo' : 'choice-live-preview is-rain'}>
+        {isBingo ? (
+          <>
+            <span className="choice-score-chip">{config.bingo.currency} 1</span>
+            <div className="choice-bingo-board">
+              {bingoDemoAmounts.map((amount, index) => (
+                <span
+                  className={index === 3 ? 'is-revealed' : ''}
+                  key={index}
+                  style={{ animationDelay: `${index * 0.08}s` }}
+                >
+                  {index === 3 ? <b>{amount || 2}</b> : null}
+                </span>
+              ))}
+            </div>
+            <div className="choice-bingo-frequency">
+              <img alt="" src="/bingo/frequency.webp" />
+              <span>Frequency：</span>
+              <i />
+              <i />
+              <i />
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="choice-score-chip">{config.bingo.currency} 1</span>
+            <span className="choice-timer-chip">
+              <img alt="" src="/diamond/timer.webp" />
+              12.3 S
+            </span>
+            {rainDrops.map((drop, index) => (
+              <img
+                alt=""
+                className={drop.type === 'bomb' ? 'choice-rain-drop is-bomb' : 'choice-rain-drop'}
+                key={index}
+                src={drop.type === 'bomb' ? '/diamond/bomb.svg' : '/diamond/gem.svg'}
+                style={{
+                  animationDelay: drop.delay,
+                  left: `${drop.left}%`,
+                  top: `${drop.top}%`,
+                }}
+              />
+            ))}
+          </>
+        )}
       </div>
-      <div className="choice-copy">
-        <h2>{title}</h2>
-        <p>{description}</p>
+
+      <div className="choice-game-stats">
+        <span>
+          <strong>{rewardScope}</strong>
+          <small>{t('rewardScope')}</small>
+        </span>
+        <span>
+          <strong>{metricValue}</strong>
+          <small>{metricLabel}</small>
+        </span>
       </div>
-      <button
-        className={isPressed ? 'primary-button is-pressed' : 'primary-button'}
-        disabled={disabled}
-        onClick={() => onSelect(gameType)}
-        onPointerDown={() => setIsPressed(true)}
-        onPointerLeave={() => setIsPressed(false)}
-        onPointerUp={() => setIsPressed(false)}
-        type="button"
-      >
-        <FaPlay aria-hidden="true" />
-        {buttonLabel}
-      </button>
-    </article>
+    </button>
   );
 };
 
 interface HomeScreenProps {
   config: ActivityConfig;
+  onBack: () => void;
   onStart: (gameType: GameType) => void;
 }
 
-export const HomeScreen = ({
-  config,
-  onStart,
-}: HomeScreenProps) => {
-  const { t } = useTranslation();
-  const [activeDemo, setActiveDemo] = useState<GameType>('bingo');
-
+export const HomeScreen = ({ config, onBack, onStart }: HomeScreenProps) => {
   return (
     <main className="home-screen">
-      <div className="home-copy">
-        <span className="section-eyebrow">Bello Play</span>
-        <h1>{t('homeTitle')}</h1>
-        <p>{t('homeSubtitle')}</p>
-      </div>
-      <DemoStage config={config} activeGame={activeDemo} onActiveGameChange={setActiveDemo} />
-      <section className="choice-grid">
-        <GameChoiceCard
-          buttonLabel={t('playBingo')}
-          description={t('bingoDescription')}
-          disabled={false}
-          gameType="bingo"
-          isActive={activeDemo === 'bingo'}
-          onSelect={onStart}
-          title={t('bingoTitle')}
-          visualPrimary={`${config.bingo.currency} ${config.bingo.minReward}-${config.bingo.maxReward}`}
-          visualSecondary={`${config.bingo.picksAllowed} Picks`}
-        />
-        <GameChoiceCard
-          buttonLabel={t('playDiamond')}
-          description={t('diamondDescription')}
-          disabled={false}
-          gameType="diamond_rain"
-          isActive={activeDemo === 'diamond_rain'}
-          onSelect={onStart}
-          title={t('diamondTitle')}
-          visualPrimary={`${config.diamondRain.durationSeconds}s`}
-          visualSecondary={`+${config.diamondRain.diamondCount} / -${config.diamondRain.bombCount}`}
-        />
+      <header className="home-game-header">
+        <button aria-label="Back" className="home-back-button" onClick={onBack} type="button">
+          <img alt="" src="/diamond/back-button.webp" />
+        </button>
+      </header>
+
+      <section className="home-game-stage">
+        <h1>Choose Your Game</h1>
+        <div className="choice-game-grid">
+          <GameChoiceCard config={config} gameType="bingo" isPrimary onSelect={onStart} />
+          <GameChoiceCard config={config} gameType="diamond_rain" onSelect={onStart} />
+        </div>
       </section>
     </main>
   );
