@@ -1,4 +1,4 @@
-# Bello Activity Games H5
+# Bello Activity Games H5 
 
 Bello offline activity game station H5. The page is designed for tablet and mobile browsers used at an event booth. A participant can choose one game, play once, receive a reward QR code, register through the existing H5 flow, and then download the Bello App.
 
@@ -12,7 +12,7 @@ Bello offline activity game station H5. The page is designed for tablet and mobi
 - Reward type can be configured by backend: cash voucher, coupon, or Bello Points.
 - Bottom scrolling banner is shown only on the home screen and hidden during games.
 - Multi-language UI: English, Chinese, and Malay.
-- Mock API mode for local preview without backend dependency.
+- Mock API mode for local preview without backend dependency
 
 ## Tech Stack
 
