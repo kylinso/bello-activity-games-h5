@@ -81,10 +81,11 @@ export const GamePage = () => {
 
   useEffect(() => {
     let cancelled = false;
+    const fixedT = i18n.getFixedT(locale);
 
     const loadConfig = async () => {
       if (!sessionId) {
-        setError(t('noSession'));
+        setError(fixedT('noSession'));
         setIsLoading(false);
         return;
       }
@@ -108,7 +109,7 @@ export const GamePage = () => {
         if (cancelled) {
           return;
         }
-        setError(isActivityError(requestError) ? requestError.message : t('configFailed'));
+        setError(isActivityError(requestError) ? requestError.message : fixedT('configFailed'));
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -121,7 +122,7 @@ export const GamePage = () => {
     return () => {
       cancelled = true;
     };
-  }, [activityId, locale, selectedStore?.id, sessionId, t]);
+  }, [activityId, i18n, locale, selectedStore?.id, sessionId]);
 
   useEffect(() => {
     if (!toastMessage) {

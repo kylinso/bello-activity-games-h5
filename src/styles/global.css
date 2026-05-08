@@ -1437,6 +1437,41 @@ a {
   white-space: nowrap;
 }
 
+.reward-code-value {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.reward-code-value span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reward-code-copy-button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(16, 25, 29, 0.12);
+  border-radius: 8px;
+  color: #10191d;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(16, 25, 29, 0.08);
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.reward-code-copy-button:hover {
+  border-color: rgba(251, 123, 33, 0.42);
+  color: #fb7b21;
+  transform: translateY(-1px);
+}
+
 .qr-panel {
   display: grid;
   justify-items: center;
