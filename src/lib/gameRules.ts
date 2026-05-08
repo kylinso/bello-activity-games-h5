@@ -54,6 +54,10 @@ export const createRewardCode = (gameType: GameType) => {
 };
 
 export const formatCurrency = (amount: number, currency: string, locale: string) => {
+  if (currency.toUpperCase() === 'MYR') {
+    return `RM ${amount}`;
+  }
+
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',

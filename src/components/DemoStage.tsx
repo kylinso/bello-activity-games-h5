@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/lib/gameRules';
 import type { ActivityConfig, GameType } from '@/types/activity';
 
 interface GameChoiceCardProps {
@@ -22,9 +23,10 @@ const rainDrops = [
 const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCardProps) => {
   const { t } = useTranslation();
   const isBingo = gameType === 'bingo';
+  const formatAmount = (amount: number) => formatCurrency(amount, config.bingo.currency, config.locale);
   const rewardScope = isBingo
-    ? `${config.bingo.currency} ${config.bingo.minReward}-${config.bingo.maxReward}`
-    : `${config.bingo.currency} ${config.diamondRain.minScore}-${Math.max(
+    ? `${formatAmount(config.bingo.minReward)}-${config.bingo.maxReward}`
+    : `${formatAmount(config.diamondRain.minScore)}-${Math.max(
         config.diamondRain.minScore,
         config.diamondRain.diamondCount * config.diamondRain.diamondValue,
       )}`;
@@ -50,7 +52,7 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
       <div className={isBingo ? 'choice-live-preview is-bingo' : 'choice-live-preview is-rain'}>
         {isBingo ? (
           <>
-            <span className="choice-score-chip">{config.bingo.currency} 1</span>
+            <span className="choice-score-chip">{formatAmount(1)}</span>
             <div className="choice-bingo-board">
               {bingoDemoAmounts.map((amount, index) => (
                 <span
@@ -72,7 +74,7 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
           </>
         ) : (
           <>
-            <span className="choice-score-chip">{config.bingo.currency} 1</span>
+            <span className="choice-score-chip">{formatAmount(1)}</span>
             <span className="choice-timer-chip">
               <img alt="" src="/diamond/timer.webp" />
               12.3 S

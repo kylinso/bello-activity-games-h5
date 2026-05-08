@@ -1,6 +1,6 @@
 import { type CSSProperties, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getRewardLabel } from '@/lib/gameRules';
+import { formatCurrency, getRewardLabel } from '@/lib/gameRules';
 import type { ActivityConfig, CompletedGamePayload } from '@/types/activity';
 
 interface CompletionClaimModalProps {
@@ -12,7 +12,7 @@ interface CompletionClaimModalProps {
 
 const getModalAmountText = (config: ActivityConfig, amount: number) => {
   if (config.rewardType === 'cash_voucher') {
-    return `${amount} ${config.bingo.currency}`;
+    return formatCurrency(amount, config.bingo.currency, config.locale);
   }
 
   if (config.rewardType === 'bello_points') {

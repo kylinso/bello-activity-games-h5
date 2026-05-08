@@ -85,7 +85,7 @@ export const createMockConfig = ({ activityId, sessionId, locale }: { activityId
     bingo: {
       gridSize: 3,
       picksAllowed: 3,
-      currency: 'SGD',
+      currency: 'MYR',
       minReward: 9,
       maxReward: 13,
       pool: [3, 3, 3, 3, 3, 4, 4, 4, 5],

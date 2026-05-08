@@ -6,7 +6,7 @@ Bello offline activity game station H5. The page is designed for tablet and mobi
 
 - Home screen with looping auto demo: Bingo demo and Diamond Rain demo rotate automatically.
 - Game selection starts immediately. Backend validation is handled when config and result APIs are called.
-- Bingo Bonus Pool: 3 x 3 grid, pick 3 tiles, default prize pool is `5 x SGD 3 + 3 x SGD 4 + 1 x SGD 5`.
+- Bingo Bonus Pool: 3 x 3 grid, pick 3 tiles, default prize pool is `5 x RM 3 + 3 x RM 4 + 1 x RM 5`.
 - Diamond Rain: default 10 seconds, 15 diamonds worth `+1`, 10 bombs worth `-1`, final score is never lower than 0.
 - Reward result page: generates a unique reward code and QR code for registration and reward claim.
 - Reward type can be configured by backend: cash voucher, coupon, or Bello Points.
@@ -93,7 +93,7 @@ Default configuration:
 {
   gridSize: 3,
   picksAllowed: 3,
-  currency: 'SGD',
+  currency: 'MYR',
   minReward: 9,
   maxReward: 13,
   pool: [3, 3, 3, 3, 3, 4, 4, 4, 5]
