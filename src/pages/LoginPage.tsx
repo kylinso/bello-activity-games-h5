@@ -257,7 +257,8 @@ export const LoginPage = () => {
             <input
               autoComplete="tel-national"
               inputMode="numeric"
-              onChange={(event) => setPhone(event.target.value)}
+              onChange={(event) => setPhone(getCleanPhone(event.target.value))}
+              pattern="[0-9]*"
               placeholder={t('loginPhonePlaceholder')}
               type="tel"
               value={phone}
