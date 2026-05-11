@@ -12,7 +12,6 @@ Bello offline activity game station H5. The page is designed for tablet and mobi
 - Reward type can be configured by backend: cash voucher, coupon, or Bello Points.
 - Bottom scrolling banner is shown only on the home screen and hidden during games.
 - Multi-language UI: English, Chinese, and Malay.
-- Mock API mode for local preview without backend dependency
 
 ## Tech Stack
 
