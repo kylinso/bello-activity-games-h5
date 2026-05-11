@@ -169,6 +169,8 @@ Response:
     bombCount: number;
     gameTimeSeconds: number;
     normalIcon: string;
+    coloredIcon: string;
+    coloredScore: number;
     bombIcon: string;
   };
   PAD_BINGO_CONFIG: {

@@ -43,8 +43,12 @@ export const getDiamondRainScore = (
   diamonds: number,
   bombs: number,
   config: DiamondRainConfig,
+  coloredDiamonds = 0,
 ) => {
-  return Math.max(config.minScore, diamonds * config.diamondValue + bombs * config.bombValue);
+  return Math.max(
+    config.minScore,
+    diamonds * config.diamondValue + coloredDiamonds * config.coloredScore + bombs * config.bombValue,
+  );
 };
 
 export const createRewardCode = (gameType: GameType) => {
@@ -86,12 +90,14 @@ export const normalizeDiamondResult = (
   config: DiamondRainConfig,
 ): DiamondRainClientResult => {
   const diamonds = clamp(result.diamonds, 0, config.diamondCount);
+  const coloredDiamonds = clamp(result.coloredDiamonds || 0, 0, 1);
   const bombs = clamp(result.bombs, 0, config.bombCount);
   return {
     ...result,
     diamonds,
+    coloredDiamonds,
     bombs,
-    finalScore: getDiamondRainScore(diamonds, bombs, config),
+    finalScore: getDiamondRainScore(diamonds, bombs, config, coloredDiamonds),
   };
 };
 

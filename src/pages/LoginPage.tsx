@@ -12,7 +12,6 @@ import {
   FaStore,
 } from 'react-icons/fa';
 import { ActivityApi } from '@/api/activityApi';
-import belloMark from '@/assets/bello-mark.svg';
 import {
   clearStoredAuthState,
   hasUsableAuthState,
@@ -231,11 +230,11 @@ export const LoginPage = () => {
             onClick={handleSelectStore}
             type="button"
           >
-            {t('chooseStore')}
+            <span>{t('chooseStore')}</span>
           </button>
-          <button className="auth-secondary-button" onClick={handleLogout} type="button">
+          {/* <button className="auth-secondary-button" onClick={handleLogout} type="button">
             {t('logout')}
-          </button>
+          </button> */}
         </div>
         {error ? <p className="auth-error">{error}</p> : null}
       </main>
@@ -246,15 +245,11 @@ export const LoginPage = () => {
     <main className="auth-shell">
       <AuthBrand />
       <section className="login-panel" aria-label={t('login')}>
-        <div className="login-mascot" aria-hidden="true">
-          <img alt="" src={belloMark} />
-        </div>
-
         <form className="login-form" onSubmit={handleSubmit}>
           <label className="auth-field auth-phone-field">
             <span className="auth-country-select">
               <select aria-label={t('phoneCountryCode')} disabled value={COUNTRY_CODE}>
-                <option value={COUNTRY_CODE}>MY {COUNTRY_CODE}</option>
+                <option value={COUNTRY_CODE}>{COUNTRY_CODE}</option>
               </select>
               <FaChevronDown aria-hidden="true" />
             </span>
@@ -335,9 +330,10 @@ export const LoginPage = () => {
               }}
               onTimeout={() => setTurnstileToken('')}
               options={{
+                appearance: 'always',
                 language: 'auto',
                 size: 'flexible',
-                theme: 'light',
+                theme: 'dark',
               }}
               ref={turnstileRef}
               siteKey={TURNSTILE_SITE_KEY}
@@ -349,7 +345,7 @@ export const LoginPage = () => {
             disabled={!canSubmit || isSubmitting}
             type="submit"
           >
-            {isSubmitting ? t('loggingIn') : t('login')}
+            <span>{isSubmitting ? t('loggingIn') : t('login')}</span>
           </button>
 
           {message ? <p className="auth-message">{message}</p> : null}
@@ -379,8 +375,11 @@ export const LoginPage = () => {
 const AuthBrand = () => {
   return (
     <header className="auth-brand">
-      <img alt="" src={belloMark} />
-      <strong>Bello</strong>
+      <img alt="" src="/logo.svg" />
+      <span>
+        <strong>Bello</strong>
+        <small>GAME KIOSK</small>
+      </span>
     </header>
   );
 };

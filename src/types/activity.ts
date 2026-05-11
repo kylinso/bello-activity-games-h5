@@ -33,6 +33,8 @@ export interface DiamondRainConfig {
   fallSpeedMinMs: number;
   fallSpeedMaxMs: number;
   normalIcon?: string;
+  coloredIcon?: string;
+  coloredScore: number;
   bombIcon?: string;
 }
 
@@ -62,6 +64,7 @@ export interface BingoClientResult {
 
 export interface DiamondRainClientResult {
   diamonds: number;
+  coloredDiamonds?: number;
   bombs: number;
   finalScore: number;
   durationMs: number;

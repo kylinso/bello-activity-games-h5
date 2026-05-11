@@ -99,6 +99,8 @@ export const createMockConfig = ({ activityId, sessionId, locale }: { activityId
       minScore: 0,
       fallSpeedMinMs: 6600,
       fallSpeedMaxMs: 8600,
+      coloredIcon: '/diamond/gem.svg',
+      coloredScore: 5,
     },
     banners: bannerCopy.map(([title, subtitle], index) => ({
       id: `mock-banner-${index + 1}`,
@@ -128,7 +130,13 @@ const getRewardAmount = (config: ActivityConfig, gameType: GameType, result: Gam
     return getBingoTotal(result as BingoClientResult)
   }
 
-  return getDiamondRainScore((result as DiamondRainClientResult).diamonds, (result as DiamondRainClientResult).bombs, config.diamondRain)
+  const diamondResult = result as DiamondRainClientResult
+  return getDiamondRainScore(
+    diamondResult.diamonds,
+    diamondResult.bombs,
+    config.diamondRain,
+    diamondResult.coloredDiamonds || 0,
+  )
 }
 
 export const mockApi = {

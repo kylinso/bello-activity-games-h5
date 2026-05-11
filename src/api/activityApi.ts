@@ -386,6 +386,7 @@ const defaultDiamondRainConfig: DiamondRainConfig = {
   minScore: 0,
   fallSpeedMinMs: 6600,
   fallSpeedMaxMs: 8600,
+  coloredScore: 5,
 };
 
 const expandScoreBuckets = (source: UnknownRecord | undefined) => {
@@ -477,6 +478,12 @@ const normalizeDiamondRainConfig = (
       defaultDiamondRainConfig.fallSpeedMaxMs,
     ),
     normalIcon: readString(source, ['normalIcon', 'normal_icon'], ''),
+    coloredIcon: readString(source, ['coloredIcon', 'colored_icon'], ''),
+    coloredScore: readNumber(
+      source,
+      ['coloredScore', 'colored_score'],
+      defaultDiamondRainConfig.coloredScore,
+    ),
     bombIcon: readString(source, ['bombIcon', 'bomb_icon'], ''),
   };
 };
