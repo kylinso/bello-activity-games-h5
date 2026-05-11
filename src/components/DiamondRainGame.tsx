@@ -134,7 +134,7 @@ export const DiamondRainGame = ({
   const remainingSecondsText = remainingSeconds.toFixed(1);
   const score = getDiamondRainScore(diamonds, bombs, config.diamondRain, coloredDiamonds);
   const scoreText = formatCurrency(score, config.bingo.currency, i18n.language);
-  const normalIcon = config.diamondRain.normalIcon || '/diamond/gem.svg';
+  const normalIcon = config.diamondRain.normalIcon || '/diamond/gem.webp';
   const coloredIcon = config.diamondRain.coloredIcon || normalIcon;
   const bombIcon = config.diamondRain.bombIcon || '/diamond/bomb.svg';
 

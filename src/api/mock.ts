@@ -99,7 +99,7 @@ export const createMockConfig = ({ activityId, sessionId, locale }: { activityId
       minScore: 0,
       fallSpeedMinMs: 6600,
       fallSpeedMaxMs: 8600,
-      coloredIcon: '/diamond/gem.svg',
+      coloredIcon: '/diamond/gem.webp',
       coloredScore: 5,
     },
     banners: bannerCopy.map(([title, subtitle], index) => ({

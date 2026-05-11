@@ -41,7 +41,7 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
     >
       <div className="choice-game-header">
         <span className={isBingo ? 'choice-game-icon is-bingo' : 'choice-game-icon'}>
-          <img alt="" src={isBingo ? '/bingo/frequency.webp' : '/diamond/gem.svg'} />
+          <img alt="" src={isBingo ? '/bingo/frequency.webp' : '/diamond/gem.webp'} />
         </span>
         <span className="choice-game-title">
           <strong>{isBingo ? 'Bingo' : t('diamondTitle')}</strong>
@@ -54,22 +54,24 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
           <>
             <span className="choice-score-chip">{formatAmount(1)}</span>
             <div className="choice-bingo-board">
-              {bingoDemoAmounts.map((amount, index) => (
-                <span
-                  className={index === 3 ? 'is-revealed' : ''}
-                  key={index}
-                  style={{ animationDelay: `${index * 0.08}s` }}
-                >
-                  {index === 3 ? <b>{amount || 2}</b> : null}
-                </span>
-              ))}
-            </div>
-            <div className="choice-bingo-frequency">
-              <img alt="" src="/bingo/frequency.webp" />
-              <span>Frequency：</span>
-              <i />
-              <i />
-              <i />
+              <div className="choice-bingo-frequency">
+                <img alt="" src="/bingo/frequency.webp" />
+                <span>Frequency：</span>
+                <i />
+                <i />
+                <i />
+              </div>
+              <div className="choice-bingo-grid">
+                {bingoDemoAmounts.map((amount, index) => (
+                  <span
+                    className={index === 3 ? 'is-revealed' : ''}
+                    key={index}
+                    style={{ animationDelay: `${index * 0.08}s` }}
+                  >
+                    {index === 3 ? <b>{amount || 2}</b> : null}
+                  </span>
+                ))}
+              </div>
             </div>
           </>
         ) : (
@@ -84,7 +86,7 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
                 alt=""
                 className={drop.type === 'bomb' ? 'choice-rain-drop is-bomb' : 'choice-rain-drop'}
                 key={index}
-                src={drop.type === 'bomb' ? '/diamond/bomb.svg' : '/diamond/gem.svg'}
+                src={drop.type === 'bomb' ? '/diamond/bomb.svg' : '/diamond/gem.webp'}
                 style={{
                   animationDelay: drop.delay,
                   left: `${drop.left}%`,
@@ -117,6 +119,8 @@ interface HomeScreenProps {
 }
 
 export const HomeScreen = ({ config, onBack, onStart }: HomeScreenProps) => {
+  const { t } = useTranslation();
+
   return (
     <main className="home-screen">
       <header className="home-game-header">
@@ -128,9 +132,13 @@ export const HomeScreen = ({ config, onBack, onStart }: HomeScreenProps) => {
       <section className="home-game-stage">
         <h1>Choose Your Game</h1>
         <div className="choice-game-grid">
-          <GameChoiceCard config={config} gameType="bingo" isPrimary onSelect={onStart} />
+          <GameChoiceCard config={config} gameType="bingo" onSelect={onStart} />
           <GameChoiceCard config={config} gameType="diamond_rain" onSelect={onStart} />
         </div>
+      </section>
+
+      <section className="home-partner" aria-label={t('partnerTitle')}>
+        {t('partnerTitle')}
       </section>
     </main>
   );

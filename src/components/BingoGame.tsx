@@ -125,6 +125,7 @@ export const BingoGame = ({ config, onComplete, onBack }: BingoGameProps) => {
       </section>
 
       <div className="game-status" aria-live="polite">
+        Scene 3 · Bingo
       </div>
     </main>
   );
