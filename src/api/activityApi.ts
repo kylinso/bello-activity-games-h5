@@ -817,6 +817,7 @@ export const ActivityApi = {
           phone: params.phone,
           validate_code: params.verificationCode,
           cfTurnstileResponse: params.cfTurnstileResponse,
+          pad: true,
         },
       );
       return toLoginResponse(params, assertOk(response.data));
@@ -838,6 +839,7 @@ export const ActivityApi = {
           mobile: params.phone,
           password: md5(params.password),
           cfTurnstileResponse: params.cfTurnstileResponse,
+          pad: true,
         },
       );
       return toLoginResponse(params, assertOk(response.data));
