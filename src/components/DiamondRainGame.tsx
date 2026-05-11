@@ -37,6 +37,8 @@ interface CollectEffect {
   label: string;
 }
 
+const FALLING_ITEM_SIZE = 62;
+
 const createFallingItems = (config: ActivityConfig): FallingItem[] => {
   const items: FallingItem[] = [];
   const totalItems = config.diamondRain.diamondCount + config.diamondRain.bombCount;
@@ -81,11 +83,11 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
       id: `${type}-${index}`,
       type,
       left: getNextLeft(),
-      size: type === 'diamond' ? 66 + (index % 3) * 9 : 62 + (index % 2) * 10,
-      drift: 12 + (index % 4) * 7,
+      size: FALLING_ITEM_SIZE,
+      drift: 0,
       phase: Math.random() * Math.PI * 2,
-      spin: (index % 2 === 0 ? 1 : -1) * (90 + (index % 5) * 18),
-      depth: 0.86 + (index % 3) * 0.08,
+      spin: 0,
+      depth: 1,
       spawnAtMs,
       durationMs: randomDurationMs,
       collected: false,
@@ -96,11 +98,11 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
     id: 'colored-0',
     type: 'colored',
     left: getNextLeft(),
-    size: 82,
-    drift: 10,
+    size: FALLING_ITEM_SIZE,
+    drift: 0,
     phase: Math.random() * Math.PI * 2,
-    spin: 120,
-    depth: 1.05,
+    spin: 0,
+    depth: 1,
     spawnAtMs: durationMs / 2,
     durationMs: Math.max(fallSpeedMaxMs, durationMs * 0.86),
     collected: false,
@@ -285,7 +287,6 @@ export const DiamondRainGame = ({
           const isVisible = progress >= 0 && progress <= 1 && !item.collected;
           const top = -10 + progress * 112;
           const drift = Math.sin(progress * Math.PI * 2 + item.phase) * item.drift;
-          const rotation = progress * item.spin;
 
           return (
             <button
@@ -304,7 +305,7 @@ export const DiamondRainGame = ({
                 width: item.size,
                 height: item.size,
                 opacity: isVisible ? 1 : 0,
-                transform: `translate3d(calc(-50% + ${drift.toFixed(1)}px), 0, 0) rotate(${rotation.toFixed(1)}deg) scale(${item.depth})`,
+                transform: `translate3d(calc(-50% + ${drift.toFixed(1)}px), 0, 0) scale(${item.depth})`,
               }}
               type="button"
             >

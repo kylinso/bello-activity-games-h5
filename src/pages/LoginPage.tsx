@@ -3,9 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import {
-  FaCheckCircle,
+  FaCheck,
   FaChevronDown,
-  FaCircle,
   FaEye,
   FaEyeSlash,
   FaMapMarkerAlt,
@@ -211,6 +210,7 @@ export const LoginPage = () => {
     return (
       <main className="auth-shell is-store-select">
         <AuthBrand />
+        <h1 className="store-select-title">{t('storeSelectTitle')}</h1>
         <section className="store-select-panel" aria-label={t('storeSelectTitle')}>
           <div className="store-list">
             {stores.map((store) => (
@@ -232,9 +232,9 @@ export const LoginPage = () => {
           >
             <span>{t('chooseStore')}</span>
           </button>
-          {/* <button className="auth-secondary-button" onClick={handleLogout} type="button">
+          <button className="auth-logout-link" onClick={handleLogout} type="button">
             {t('logout')}
-          </button> */}
+          </button>
         </div>
         {error ? <p className="auth-error">{error}</p> : null}
       </main>
@@ -275,6 +275,7 @@ export const LoginPage = () => {
                 type="text"
                 value={verificationCode}
               />
+              <span className="auth-input-divider" />
               <button
                 className="send-code-button"
                 disabled={cleanPhone.length < 6 || isSendingCode || sendCodeCountdown > 0}
@@ -405,8 +406,8 @@ const StoreOption = ({
         type="radio"
         value={store.id}
       />
-      <span className="store-radio" aria-hidden="true">
-        {isSelected ? <FaCheckCircle /> : <FaCircle />}
+      <span className="store-cover">
+        {store.coverUrl ? <img alt="" src={store.coverUrl} /> : t('storeCover')}
       </span>
       <span className="store-copy">
         <strong>
@@ -419,8 +420,8 @@ const StoreOption = ({
           {store.address}
         </span>
       </span>
-      <span className="store-cover">
-        {store.coverUrl ? <img alt="" src={store.coverUrl} /> : t('storeCover')}
+      <span className="store-radio" aria-hidden="true">
+        {isSelected ? <FaCheck /> : null}
       </span>
     </label>
   );
