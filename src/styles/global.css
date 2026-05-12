@@ -7474,8 +7474,8 @@ svg {
 /* DiamondRainGame: CSS-driven fall (perf rewrite — replaces 60fps setState) */
 .falling-item {
   transform: translate3d(-50%, -16vh, 0);
-  pointer-events: none;
   animation: diamondFall var(--fall-duration, 4000ms) linear var(--fall-delay, 0ms) forwards;
+  touch-action: manipulation;
 }
 
 .falling-item.is-collected {
@@ -7492,11 +7492,9 @@ svg {
 @keyframes diamondFall {
   0% {
     transform: translate3d(-50%, -16vh, 0);
-    pointer-events: auto;
   }
   100% {
     transform: translate3d(-50%, 110vh, 0);
-    pointer-events: none;
   }
 }
 

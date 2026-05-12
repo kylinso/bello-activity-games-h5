@@ -1,4 +1,4 @@
-import { type CSSProperties, type MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   formatCurrency,
@@ -38,15 +38,24 @@ interface CollectEffect {
 }
 
 const FALLING_ITEM_SIZE = 62;
+// 倒计时归零前留这么久的"收尾时间"，保证最后一颗钻石视觉上完整落到底
+const SAFETY_BUFFER_MS = 250;
 
 const createFallingItems = (config: ActivityConfig): FallingItem[] => {
   const items: FallingItem[] = [];
   const totalItems = config.diamondRain.diamondCount + config.diamondRain.bombCount;
   const durationMs = config.diamondRain.durationSeconds * 1000;
-  const spawnWindowMs = durationMs * 0.7;
+
+  // 单个 item 至少要 fall 这么久，保证玩家有反应时间
+  const minFallMs = Math.max(1200, config.diamondRain.fallSpeedMinMs);
+  // 单个 item 最多 fall 这么久，但不超过整局时长 - 收尾余量
+  const maxFallMs = Math.max(
+    minFallMs + 600,
+    Math.min(config.diamondRain.fallSpeedMaxMs, durationMs - SAFETY_BUFFER_MS),
+  );
+  // spawn 窗口：保证最晚 spawn 的 item 仍有 minFallMs 时间能落到底
+  const spawnWindowMs = Math.max(0, durationMs - minFallMs - SAFETY_BUFFER_MS);
   const spacing = spawnWindowMs / Math.max(totalItems - 1, 1);
-  const fallSpeedMinMs = Math.max(config.diamondRain.fallSpeedMinMs, durationMs * 0.72);
-  const fallSpeedMaxMs = Math.max(config.diamondRain.fallSpeedMaxMs, fallSpeedMinMs + 1200);
   const itemTypes = shuffle([
     ...Array.from({ length: config.diamondRain.diamondCount }, () => 'diamond' as const),
     ...Array.from({ length: config.diamondRain.bombCount }, () => 'bomb' as const),
@@ -71,13 +80,20 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
     return fallback;
   };
 
+  // 计算给定 spawn 时间下，该 item 还能下落多久（不超过整局 - 收尾余量）
+  const pickFallDuration = (spawnAtMs: number) => {
+    const availableMs = Math.max(minFallMs, durationMs - spawnAtMs - SAFETY_BUFFER_MS);
+    const clampedMax = Math.min(maxFallMs, availableMs);
+    const span = Math.max(0, clampedMax - minFallMs);
+    return minFallMs + Math.random() * span;
+  };
+
   for (let index = 0; index < totalItems; index += 1) {
     const type = itemTypes[index] || 'diamond';
     const spawnAtMs = Math.min(
       spawnWindowMs,
       Math.max(0, index * spacing - 320 + Math.random() * 420),
     );
-    const randomDurationMs = fallSpeedMinMs + Math.random() * (fallSpeedMaxMs - fallSpeedMinMs);
 
     items.push({
       id: `${type}-${index}`,
@@ -85,17 +101,19 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
       left: getNextLeft(),
       size: FALLING_ITEM_SIZE,
       spawnAtMs,
-      durationMs: randomDurationMs,
+      durationMs: pickFallDuration(spawnAtMs),
     });
   }
 
+  // 彩钻挑 spawn 窗口偏后段出现（吊胃口效果），duration 同样 clamp 到能落完
+  const coloredSpawnAt = Math.min(spawnWindowMs, spawnWindowMs * 0.6);
   items.push({
     id: 'colored-0',
     type: 'colored',
     left: getNextLeft(),
     size: FALLING_ITEM_SIZE,
-    spawnAtMs: durationMs / 2,
-    durationMs: Math.max(fallSpeedMaxMs, durationMs * 0.86),
+    spawnAtMs: coloredSpawnAt,
+    durationMs: pickFallDuration(coloredSpawnAt),
   });
 
   return items.sort((left, right) => left.spawnAtMs - right.spawnAtMs);
@@ -198,7 +216,7 @@ export const DiamondRainGame = ({
     return () => window.clearTimeout(timer);
   }, [scorePulse]);
 
-  const collectItem = (item: FallingItem, event: MouseEvent<HTMLButtonElement>) => {
+  const collectItem = (item: FallingItem, event: PointerEvent<HTMLButtonElement>) => {
     if (isCompleteRef.current) return;
     if (collectedRef.current.has(item.id)) return;
 
@@ -279,7 +297,7 @@ export const DiamondRainGame = ({
                 item.type === 'colored' ? 'is-colored' : '',
               ].filter(Boolean).join(' ')}
               key={item.id}
-              onClick={(event) => collectItem(item, event)}
+              onPointerDown={(event) => collectItem(item, event)}
               style={style}
               type="button"
             >
