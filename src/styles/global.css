@@ -4721,9 +4721,12 @@ svg {
 }
 
 .auth-brand img {
+  /* design spec: 1100 × 523 (aspect-ratio 326/155) */
   display: block;
-  width: clamp(94px, 14dvh, 124px);
-  height: clamp(94px, 14dvh, 124px);
+  width: 100%;
+  max-width: 1100px;
+  height: auto;
+  aspect-ratio: 326 / 155;
   object-fit: contain;
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.24));
   animation: authLogoFloat 4.2s ease-in-out 680ms infinite;
