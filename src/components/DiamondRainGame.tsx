@@ -1,10 +1,9 @@
-import { type MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, type MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatCurrency, getDiamondRainScore, normalizeDiamondResult, shuffle } from '@/lib/gameRules';
 import type {
   ActivityConfig,
   CompletedGamePayload,
-  DiamondRainClientResult,
 } from '@/types/activity';
 
 interface DiamondRainGameProps {
@@ -20,13 +19,8 @@ interface FallingItem {
   type: 'diamond' | 'colored' | 'bomb';
   left: number;
   size: number;
-  drift: number;
-  phase: number;
-  spin: number;
-  depth: number;
   spawnAtMs: number;
   durationMs: number;
-  collected: boolean;
 }
 
 interface CollectEffect {
@@ -84,13 +78,8 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
       type,
       left: getNextLeft(),
       size: FALLING_ITEM_SIZE,
-      drift: 0,
-      phase: Math.random() * Math.PI * 2,
-      spin: 0,
-      depth: 1,
       spawnAtMs,
       durationMs: randomDurationMs,
-      collected: false,
     });
   }
 
@@ -99,13 +88,8 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
     type: 'colored',
     left: getNextLeft(),
     size: FALLING_ITEM_SIZE,
-    drift: 0,
-    phase: Math.random() * Math.PI * 2,
-    spin: 0,
-    depth: 1,
     spawnAtMs: durationMs / 2,
     durationMs: Math.max(fallSpeedMaxMs, durationMs * 0.86),
-    collected: false,
   });
 
   return items.sort((left, right) => left.spawnAtMs - right.spawnAtMs);
@@ -117,148 +101,137 @@ export const DiamondRainGame = ({
   onBack,
 }: DiamondRainGameProps) => {
   const { i18n, t } = useTranslation();
-  const [items, setItems] = useState(() => createFallingItems(config));
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const items = useMemo(() => createFallingItems(config), [config]);
+
+  const durationMs = config.diamondRain.durationSeconds * 1000;
+
   const [diamonds, setDiamonds] = useState(0);
   const [coloredDiamonds, setColoredDiamonds] = useState(0);
   const [bombs, setBombs] = useState(0);
   const [effects, setEffects] = useState<CollectEffect[]>([]);
   const [scorePulse, setScorePulse] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const startTime = useRef(performance.now());
-  const completed = useRef(false);
-  const completeTimer = useRef<number | null>(null);
+  const [remainingSecondsText, setRemainingSecondsText] = useState(
+    (durationMs / 1000).toFixed(1),
+  );
 
-  const durationMs = config.diamondRain.durationSeconds * 1000;
-  const remainingSeconds = Math.max(0, (durationMs - elapsedMs) / 1000);
-  const remainingSecondsText = remainingSeconds.toFixed(1);
+  const diamondsRef = useRef(0);
+  const coloredRef = useRef(0);
+  const bombsRef = useRef(0);
+  const collectedRef = useRef<Set<string>>(new Set());
+  const isCompleteRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
   const score = getDiamondRainScore(diamonds, bombs, config.diamondRain, coloredDiamonds);
   const scoreText = formatCurrency(score, config.bingo.currency, i18n.language);
+
   const normalIcon = config.diamondRain.normalIcon || '/diamond/gem.webp';
   const coloredIcon = config.diamondRain.coloredIcon || normalIcon;
   const bombIcon = config.diamondRain.bombIcon || '/diamond/bomb.svg';
 
-  const resultPayload = useMemo<DiamondRainClientResult>(
-    () =>
-      normalizeDiamondResult(
-        {
-          diamonds,
-          coloredDiamonds,
-          bombs,
-          finalScore: score,
-          durationMs: Math.min(elapsedMs, durationMs),
-        },
-        config.diamondRain,
-      ),
-    [bombs, coloredDiamonds, config.diamondRain, diamonds, durationMs, elapsedMs, score],
-  );
-
   useEffect(() => {
-    let raf = 0;
+    const startTime = performance.now();
+    let onCompleteTimerId: number | undefined;
 
-    const tick = () => {
-      const nextElapsedMs = performance.now() - startTime.current;
-      setElapsedMs(Math.min(nextElapsedMs, durationMs));
+    const tickId = window.setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      const left = Math.max(0, (durationMs - elapsed) / 1000);
+      setRemainingSecondsText(left.toFixed(1));
+      if (elapsed >= durationMs) {
+        window.clearInterval(tickId);
+      }
+    }, 100);
 
-      if (nextElapsedMs < durationMs) {
-        raf = window.requestAnimationFrame(tick);
+    const completeTimerId = window.setTimeout(() => {
+      isCompleteRef.current = true;
+      setIsComplete(true);
+
+      onCompleteTimerId = window.setTimeout(() => {
+        const finalScore = getDiamondRainScore(
+          diamondsRef.current,
+          bombsRef.current,
+          config.diamondRain,
+          coloredRef.current,
+        );
+        const payload = normalizeDiamondResult(
+          {
+            diamonds: diamondsRef.current,
+            coloredDiamonds: coloredRef.current,
+            bombs: bombsRef.current,
+            finalScore,
+            durationMs,
+          },
+          config.diamondRain,
+        );
+        onCompleteRef.current({
+          gameType: 'diamond_rain',
+          clientResult: payload,
+          rewardAmount: payload.finalScore,
+        });
+      }, 1000);
+    }, durationMs);
+
+    return () => {
+      window.clearInterval(tickId);
+      window.clearTimeout(completeTimerId);
+      if (onCompleteTimerId !== undefined) {
+        window.clearTimeout(onCompleteTimerId);
       }
     };
-
-    raf = window.requestAnimationFrame(tick);
-    return () => {
-      window.cancelAnimationFrame(raf);
-    };
-  }, [durationMs]);
-
-  useEffect(() => {
-    return () => {
-      if (completeTimer.current !== null) {
-        window.clearTimeout(completeTimer.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (elapsedMs < durationMs || completed.current) {
-      return;
-    }
-
-    completed.current = true;
-    setIsComplete(true);
-    completeTimer.current = window.setTimeout(() => {
-      onComplete({
-        gameType: 'diamond_rain',
-        clientResult: resultPayload,
-        rewardAmount: resultPayload.finalScore,
-      });
-    }, 1000);
-  }, [durationMs, elapsedMs, onComplete, resultPayload]);
+  }, [config.diamondRain, durationMs]);
 
   useEffect(() => {
     if (!scorePulse) {
       return;
     }
-
     const timer = window.setTimeout(() => setScorePulse(false), 260);
     return () => window.clearTimeout(timer);
   }, [scorePulse]);
 
-  const collectItem = (id: string, event: MouseEvent<HTMLButtonElement>) => {
-    if (isComplete || elapsedMs >= durationMs) {
-      return;
+  const collectItem = (item: FallingItem, event: MouseEvent<HTMLButtonElement>) => {
+    if (isCompleteRef.current) return;
+    if (collectedRef.current.has(item.id)) return;
+
+    collectedRef.current.add(item.id);
+    const btn = event.currentTarget;
+    btn.classList.add('is-collected');
+
+    if (item.type === 'diamond') {
+      diamondsRef.current += 1;
+      setDiamonds(diamondsRef.current);
+    } else if (item.type === 'colored') {
+      coloredRef.current += 1;
+      setColoredDiamonds(coloredRef.current);
+    } else {
+      bombsRef.current += 1;
+      setBombs(bombsRef.current);
     }
 
-    const field = event.currentTarget.closest('.rain-field');
+    const field = btn.closest('.rain-field');
     const fieldRect = field?.getBoundingClientRect();
     const x = fieldRect ? event.clientX - fieldRect.left : event.clientX;
     const y = fieldRect ? event.clientY - fieldRect.top : event.clientY;
 
-    setItems((currentItems) =>
-      currentItems.map((item) => {
-        if (item.id !== id || item.collected) {
-          return item;
-        }
-
-        if (item.type === 'diamond') {
-          setDiamonds((value) => value + 1);
-        } else if (item.type === 'colored') {
-          setColoredDiamonds((value) => value + 1);
-        } else {
-          setBombs((value) => value + 1);
-        }
-
-        const effectId = `${item.id}-${performance.now()}`;
-        const label =
-          item.type === 'diamond'
-            ? `+${config.diamondRain.diamondValue}`
-            : item.type === 'colored'
-              ? `+${config.diamondRain.coloredScore}`
-              : `${config.diamondRain.bombValue}`;
-        setEffects((currentEffects) => [
-          ...currentEffects,
-          {
-            id: effectId,
-            type: item.type,
-            x,
-            y,
-            label,
-          },
-        ]);
-        setScorePulse(true);
-        window.setTimeout(() => {
-          setEffects((currentEffects) =>
-            currentEffects.filter((effect) => effect.id !== effectId),
-          );
-        }, 720);
-
-        return { ...item, collected: true };
-      }),
-    );
+    const effectId = `${item.id}-${performance.now()}`;
+    const label =
+      item.type === 'diamond'
+        ? `+${config.diamondRain.diamondValue}`
+        : item.type === 'colored'
+          ? `+${config.diamondRain.coloredScore}`
+          : `${config.diamondRain.bombValue}`;
+    setEffects((current) => [...current, { id: effectId, type: item.type, x, y, label }]);
+    setScorePulse(true);
+    window.setTimeout(() => {
+      setEffects((current) => current.filter((e) => e.id !== effectId));
+    }, 720);
   };
 
   return (
-    <main className="game-screen rain-screen">
+    <main className={isComplete ? 'game-screen rain-screen is-complete' : 'game-screen rain-screen'}>
       <header className="rain-game-header">
         <button
           aria-label={t('backHome')}
@@ -283,10 +256,13 @@ export const DiamondRainGame = ({
         <div className="rain-speed-lines" aria-hidden="true" />
         <div className="rain-glow-layer" aria-hidden="true" />
         {items.map((item) => {
-          const progress = (elapsedMs - item.spawnAtMs) / item.durationMs;
-          const isVisible = progress >= 0 && progress <= 1 && !item.collected;
-          const top = -10 + progress * 112;
-          const drift = Math.sin(progress * Math.PI * 2 + item.phase) * item.drift;
+          const style = {
+            left: `${item.left}%`,
+            width: item.size,
+            height: item.size,
+            '--fall-delay': `${item.spawnAtMs}ms`,
+            '--fall-duration': `${item.durationMs}ms`,
+          } as CSSProperties;
 
           return (
             <button
@@ -296,17 +272,9 @@ export const DiamondRainGame = ({
                 item.type === 'bomb' ? 'is-bomb' : '',
                 item.type === 'colored' ? 'is-colored' : '',
               ].filter(Boolean).join(' ')}
-              disabled={!isVisible}
               key={item.id}
-              onClick={(event) => collectItem(item.id, event)}
-              style={{
-                left: `${item.left}%`,
-                top: `${top}%`,
-                width: item.size,
-                height: item.size,
-                opacity: isVisible ? 1 : 0,
-                transform: `translate3d(calc(-50% + ${drift.toFixed(1)}px), 0, 0) scale(${item.depth})`,
-              }}
+              onClick={(event) => collectItem(item, event)}
+              style={style}
               type="button"
             >
               <span className="falling-trail" aria-hidden="true" />
