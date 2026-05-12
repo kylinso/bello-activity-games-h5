@@ -8,7 +8,7 @@ interface AttractScreenProps {
   onEnter: () => void
 }
 
-const attractDemoVideoSrc = '/%E5%90%88%E6%88%90%203.mp4'
+const attractDemoVideoSrc = '/attract-demo.mp4'
 
 export const AttractScreen = ({ config, onEnter }: AttractScreenProps) => {
   const { t } = useTranslation()
