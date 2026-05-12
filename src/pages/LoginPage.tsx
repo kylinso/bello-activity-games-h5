@@ -412,12 +412,12 @@ const StoreOption = ({
       <span className="store-copy">
         <strong>
           <FaStore aria-hidden="true" />
-          {store.name}
+          <span className="store-copy-text">{store.name}</span>
         </strong>
         <small>{store.countryCity}</small>
         <span>
           <FaMapMarkerAlt aria-hidden="true" />
-          {store.address}
+          <span className="store-copy-text">{store.address}</span>
         </span>
       </span>
       <span className="store-radio" aria-hidden="true">

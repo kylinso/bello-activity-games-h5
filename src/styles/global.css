@@ -7513,3 +7513,18 @@ html.kiosk-mode body {
 html.kiosk-mode * {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* 让 .store-copy 中 flex 容器（strong/span）里的文本能正确 ellipsis */
+.store-copy strong,
+.store-copy span {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.store-copy .store-copy-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
