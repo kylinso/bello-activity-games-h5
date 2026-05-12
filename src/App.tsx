@@ -1,7 +1,12 @@
+import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { LoadingState } from '@/components/LoadingState';
 import { hasUsableAuthState, readStoredAuthState } from '@/lib/storage';
-import { GamePage } from '@/pages/GamePage';
 import { LoginPage } from '@/pages/LoginPage';
+
+const GamePage = lazy(() =>
+  import('@/pages/GamePage').then((m) => ({ default: m.GamePage })),
+);
 
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
   const location = useLocation();
@@ -27,18 +32,20 @@ const RootRedirect = () => {
 
 const App = () => {
   return (
-    <Routes>
-      <Route element={<LoginPage />} path="/login" />
-      <Route
-        element={
-          <RequireAuth>
-            <GamePage />
-          </RequireAuth>
-        }
-        path="/game"
-      />
-      <Route element={<RootRedirect />} path="*" />
-    </Routes>
+    <Suspense fallback={<LoadingState />}>
+      <Routes>
+        <Route element={<LoginPage />} path="/login" />
+        <Route
+          element={
+            <RequireAuth>
+              <GamePage />
+            </RequireAuth>
+          }
+          path="/game"
+        />
+        <Route element={<RootRedirect />} path="*" />
+      </Routes>
+    </Suspense>
   );
 };
 
