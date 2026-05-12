@@ -380,7 +380,7 @@ export const LoginPage = () => {
 const AuthBrand = () => {
   return (
     <header className="auth-brand">
-      <img alt="" src="/logo.svg" />
+      <img alt="" src="/logo.webp" />
       <span>
         <strong>Bello</strong>
         <small>GAME KIOSK</small>
