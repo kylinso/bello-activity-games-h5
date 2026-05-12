@@ -13,8 +13,10 @@ import { HeaderBar } from '@/components/HeaderBar';
 import { HomeScreen } from '@/components/DemoStage';
 import { LoadingState } from '@/components/LoadingState';
 import { ResultScreen } from '@/components/ResultScreen';
+import { isKioskMode } from '@/lib/kiosk';
 import { getRequestErrorMessage } from '@/lib/requestErrors';
 import { readStoredAuthState } from '@/lib/storage';
+import { useWakeLock } from '@/lib/wake-lock';
 import type {
   ActivityConfig,
   CompletedGamePayload,
@@ -73,6 +75,9 @@ export const GamePage = () => {
     selectedStore?.id ||
     (isMockMode ? getDemoSessionId(activityId, selectedStore?.id) : '');
   const locale = normalizeLocale(i18n.language);
+
+  const isKiosk = isKioskMode();
+  useWakeLock(isKiosk);
 
   const [config, setConfig] = useState<ActivityConfig | null>(null);
   const [screen, setScreen] = useState<ScreenState>('attract');
