@@ -1,4 +1,4 @@
-import { buildRewardQrUrl, createRewardCode, formatCurrency, getBingoTotal, getDiamondRainScore } from '@/lib/gameRules'
+import { buildRewardQrUrl, createRewardCode, formatCurrency, getBingoTotal, getDiamondRainReward } from '@/lib/gameRules'
 import type { ActivityConfig, BannerEventType, BingoClientResult, DiamondRainClientResult, GameClientResult, GameType, Locale, RewardResult } from '@/types/activity'
 import type { LoginCodeRequest, LoginResponse, LoginWithCodeRequest, LoginWithPasswordRequest, StoreProfile } from '@/types/auth'
 
@@ -131,7 +131,7 @@ const getRewardAmount = (config: ActivityConfig, gameType: GameType, result: Gam
   }
 
   const diamondResult = result as DiamondRainClientResult
-  return getDiamondRainScore(
+  return getDiamondRainReward(
     diamondResult.diamonds,
     diamondResult.bombs,
     config.diamondRain,

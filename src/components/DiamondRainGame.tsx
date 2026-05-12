@@ -1,6 +1,12 @@
 import { type CSSProperties, type MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatCurrency, getDiamondRainScore, normalizeDiamondResult, shuffle } from '@/lib/gameRules';
+import {
+  formatCurrency,
+  getDiamondRainReward,
+  getDiamondRainScore,
+  normalizeDiamondResult,
+  shuffle,
+} from '@/lib/gameRules';
 import type {
   ActivityConfig,
   CompletedGamePayload,
@@ -151,7 +157,7 @@ export const DiamondRainGame = ({
       setIsComplete(true);
 
       onCompleteTimerId = window.setTimeout(() => {
-        const finalScore = getDiamondRainScore(
+        const finalScore = getDiamondRainReward(
           diamondsRef.current,
           bombsRef.current,
           config.diamondRain,
