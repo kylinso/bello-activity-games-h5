@@ -41,12 +41,8 @@ export const AttractScreen = ({ config, onEnter }: AttractScreenProps) => {
           <img
             alt=""
             className="attract-brand-logo"
-            src="/logo.svg"
+            src="/logo.webp"
           />
-          <span>
-            <strong>Bello</strong>
-            <small>GAME KIOSK</small>
-          </span>
         </header>
 
         <section

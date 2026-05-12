@@ -2934,9 +2934,12 @@ svg {
 }
 
 .attract-brand-logo {
+  /* design spec @2x: 385 × 183 → CSS px: 192.5 × 91.5 (aspect 162/77) */
   display: block;
-  width: clamp(64px, 7.5dvh, 96px);
-  height: clamp(64px, 7.5dvh, 96px);
+  width: 192.5px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 162 / 77;
   flex: 0 0 auto;
   border-radius: 8px;
   object-fit: contain;
@@ -3862,8 +3865,8 @@ svg {
   }
 
   .attract-brand-logo {
-    width: clamp(56px, 7dvh, 76px);
-    height: clamp(56px, 7dvh, 76px);
+    width: clamp(140px, 26vw, 180px);
+    height: auto;
   }
 
   .attract-brand strong {
@@ -3966,8 +3969,8 @@ svg {
   }
 
   .attract-brand-logo {
-    width: clamp(58px, 7dvh, 78px);
-    height: clamp(58px, 7dvh, 78px);
+    width: clamp(144px, 26vw, 184px);
+    height: auto;
   }
 
   .attract-brand strong {
@@ -4062,8 +4065,8 @@ svg {
   }
 
   .attract-brand-logo {
-    width: 56px;
-    height: 56px;
+    width: 140px;
+    height: auto;
   }
 
   .attract-brand strong {
@@ -4721,10 +4724,10 @@ svg {
 }
 
 .auth-brand img {
-  /* design spec: 1100 × 523 (aspect-ratio 326/155) */
+  /* design spec @2x: 1100 × 523 → CSS px: 550 × 261.5 (aspect 326/155) */
   display: block;
   width: 100%;
-  max-width: 1100px;
+  max-width: 550px;
   height: auto;
   aspect-ratio: 326 / 155;
   object-fit: contain;
