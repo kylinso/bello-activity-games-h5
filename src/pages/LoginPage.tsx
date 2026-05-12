@@ -362,11 +362,11 @@ export const LoginPage = () => {
           type="checkbox"
         />
         <span>{t('loginAgreePrefix')}</span>
-        <a href="/terms" target="_blank" rel="noreferrer">
+        <a href="https://biz.bello2u.com/privacy" target="_blank" rel="noreferrer">
           {t('termsOfService')}
         </a>
         <span>{t('and')}</span>
-        <a href="/privacy" target="_blank" rel="noreferrer">
+        <a href="https://biz.bello2u.com/privacy" target="_blank" rel="noreferrer">
           {t('privacyPolicy')}
         </a>
       </label>
