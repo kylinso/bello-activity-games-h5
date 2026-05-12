@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { requestFullscreen } from '@/lib/fullscreen'
 import {
   formatCurrency,
   getBingoRewardRange,
@@ -104,10 +103,7 @@ export const AttractScreen = ({ config, onEnter }: AttractScreenProps) => {
 
         <button
           className="attract-cta"
-          onClick={() => {
-            void requestFullscreen()
-            onEnter()
-          }}
+          onClick={onEnter}
           type="button">
           <img
             alt=""

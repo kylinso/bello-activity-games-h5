@@ -11,6 +11,7 @@ import {
   FaStore,
 } from 'react-icons/fa';
 import { ActivityApi } from '@/api/activityApi';
+import { requestFullscreen } from '@/lib/fullscreen';
 import {
   clearStoredAuthState,
   hasUsableAuthState,
@@ -194,6 +195,8 @@ export const LoginPage = () => {
       ...authDraft,
       selectedStore,
     });
+    // 进入游戏前请求全屏（user gesture：选店 Select 按钮点击）
+    void requestFullscreen();
     navigate(returnTo, { replace: true });
   };
 
