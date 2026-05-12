@@ -7512,6 +7512,17 @@ html.kiosk-mode * {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Fullscreen API 切换时 backdrop 默认黑色会闪一下，用深色主题色铺底 */
+:fullscreen::backdrop,
+:-webkit-full-screen::backdrop {
+  background-color: #181014;
+}
+
+:fullscreen,
+:-webkit-full-screen {
+  background-color: #181014;
+}
+
 /* 让 .store-copy 中 flex 容器（strong/span）里的文本能正确 ellipsis */
 .store-copy strong,
 .store-copy span {
