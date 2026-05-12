@@ -2,13 +2,20 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import { initKioskFromUrl } from './lib/kiosk';
+import { installKioskGuards } from './lib/kiosk-guards';
 import './i18n';
 import './styles/global.css';
 
+initKioskFromUrl();
+installKioskGuards();
+
+const tree = (
+  <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+    <App />
+  </BrowserRouter>
+);
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>,
+  import.meta.env.DEV ? <React.StrictMode>{tree}</React.StrictMode> : tree,
 );

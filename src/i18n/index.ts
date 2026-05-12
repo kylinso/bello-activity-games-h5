@@ -265,12 +265,7 @@ const resources = {
   },
 };
 
-const browserLanguage = navigator.language.toLowerCase();
-const defaultLanguage = browserLanguage.startsWith('zh')
-  ? 'zh'
-  : browserLanguage.startsWith('ms')
-    ? 'ms'
-    : 'en';
+const defaultLanguage = 'en';
 
 void i18n.use(initReactI18next).init({
   resources,

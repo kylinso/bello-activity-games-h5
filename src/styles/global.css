@@ -7470,3 +7470,61 @@ svg {
     font-size: 32px;
   }
 }
+
+/* DiamondRainGame: CSS-driven fall (perf rewrite — replaces 60fps setState) */
+.falling-item {
+  transform: translate3d(-50%, -16vh, 0);
+  pointer-events: none;
+  animation: diamondFall var(--fall-duration, 4000ms) linear var(--fall-delay, 0ms) forwards;
+}
+
+.falling-item.is-collected {
+  opacity: 0;
+  pointer-events: none;
+  animation-play-state: paused;
+}
+
+.rain-screen.is-complete .falling-item {
+  pointer-events: none;
+  animation-play-state: paused;
+}
+
+@keyframes diamondFall {
+  0% {
+    transform: translate3d(-50%, -16vh, 0);
+    pointer-events: auto;
+  }
+  100% {
+    transform: translate3d(-50%, 110vh, 0);
+    pointer-events: none;
+  }
+}
+
+/* Kiosk mode: 屏蔽浏览器默认手势/选择行为 */
+html.kiosk-mode,
+html.kiosk-mode body {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overscroll-behavior: contain;
+  touch-action: manipulation;
+}
+
+html.kiosk-mode * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 让 .store-copy 中 flex 容器（strong/span）里的文本能正确 ellipsis */
+.store-copy strong,
+.store-copy span {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.store-copy .store-copy-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

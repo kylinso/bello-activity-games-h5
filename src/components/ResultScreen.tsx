@@ -1,10 +1,13 @@
 import { QRCodeSVG } from 'qrcode.react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import belloMark from '@/assets/bello-mark.svg';
 import type { RewardResult } from '@/types/activity';
 
 interface ResultScreenProps {
   result: RewardResult;
+  autoResetMs?: number;
+  onAutoReset?: () => void;
 }
 
 const getResultAmountText = (result: RewardResult) => {
@@ -18,9 +21,15 @@ const getResultAmountText = (result: RewardResult) => {
   return result.rewardDisplayText;
 };
 
-export const ResultScreen = ({ result }: ResultScreenProps) => {
+export const ResultScreen = ({ result, autoResetMs, onAutoReset }: ResultScreenProps) => {
   const { t } = useTranslation();
   const claimLink = result.claimToken || result.qrUrl;
+
+  useEffect(() => {
+    if (!autoResetMs || !onAutoReset) return;
+    const timerId = window.setTimeout(onAutoReset, autoResetMs);
+    return () => window.clearTimeout(timerId);
+  }, [autoResetMs, onAutoReset]);
 
   return (
     <main className="result-screen">

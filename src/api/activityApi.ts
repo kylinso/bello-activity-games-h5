@@ -7,7 +7,7 @@ import {
   createRewardCode,
   formatCurrency,
   getBingoTotal,
-  getDiamondRainScore,
+  getDiamondRainReward,
 } from '@/lib/gameRules';
 import type {
   ActivityConfig,
@@ -583,7 +583,12 @@ const getClientScore = (
     return diamondResult.finalScore;
   }
 
-  return getDiamondRainScore(diamondResult.diamonds, diamondResult.bombs, config.diamondRain);
+  return getDiamondRainReward(
+    diamondResult.diamonds,
+    diamondResult.bombs,
+    config.diamondRain,
+    diamondResult.coloredDiamonds || 0,
+  );
 };
 
 const getRewardDisplayText = (
