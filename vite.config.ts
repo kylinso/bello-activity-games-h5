@@ -19,4 +19,21 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    target: 'es2018',
+    cssCodeSplit: true,
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['react-router-dom'],
+          'i18n-vendor': ['i18next', 'react-i18next'],
+          'http-vendor': ['axios'],
+          'icons-vendor': ['react-icons'],
+        },
+      },
+    },
+  },
 });
