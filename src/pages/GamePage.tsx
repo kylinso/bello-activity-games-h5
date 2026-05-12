@@ -13,9 +13,10 @@ import { HeaderBar } from '@/components/HeaderBar';
 import { HomeScreen } from '@/components/DemoStage';
 import { LoadingState } from '@/components/LoadingState';
 import { ResultScreen } from '@/components/ResultScreen';
-import { isKioskMode } from '@/lib/kiosk';
+import { useIdleTimer } from '@/lib/idle-timer';
+import { IDLE_TIMEOUT_MS, isKioskMode } from '@/lib/kiosk';
 import { getRequestErrorMessage } from '@/lib/requestErrors';
-import { readStoredAuthState } from '@/lib/storage';
+import { clearStoredAuthState, readStoredAuthState } from '@/lib/storage';
 import { useWakeLock } from '@/lib/wake-lock';
 import type {
   ActivityConfig,
@@ -78,6 +79,14 @@ export const GamePage = () => {
 
   const isKiosk = isKioskMode();
   useWakeLock(isKiosk);
+  useIdleTimer(
+    IDLE_TIMEOUT_MS,
+    () => {
+      clearStoredAuthState();
+      window.location.replace('/login');
+    },
+    isKiosk,
+  );
 
   const [config, setConfig] = useState<ActivityConfig | null>(null);
   const [screen, setScreen] = useState<ScreenState>('attract');
