@@ -8,6 +8,7 @@ interface ResultScreenProps {
   result: RewardResult;
   autoResetMs?: number;
   onAutoReset?: () => void;
+  onBack?: () => void;
 }
 
 const getResultAmountText = (result: RewardResult) => {
@@ -22,7 +23,7 @@ const getResultAmountText = (result: RewardResult) => {
   return result.rewardDisplayText;
 };
 
-export const ResultScreen = ({ result, autoResetMs, onAutoReset }: ResultScreenProps) => {
+export const ResultScreen = ({ result, autoResetMs, onAutoReset, onBack }: ResultScreenProps) => {
   const { t } = useTranslation();
   const claimLink = result.claimToken || result.qrUrl;
 
@@ -38,7 +39,7 @@ export const ResultScreen = ({ result, autoResetMs, onAutoReset }: ResultScreenP
         <button
           aria-label={t('backHome')}
           className="result-back-button"
-          onClick={() => window.location.reload()}
+          onClick={() => (onBack ? onBack() : window.location.reload())}
           type="button"
         >
           <img alt="" src="/diamond/back-button.webp" />

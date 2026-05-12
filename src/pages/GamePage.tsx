@@ -226,6 +226,14 @@ export const GamePage = () => {
     window.location.replace('/login');
   }, []);
 
+  const handleBackFromResult = useCallback(() => {
+    setRewardResult(null);
+    setCompletedGame(null);
+    setPlayId('');
+    setToastMessage('');
+    setScreen('attract');
+  }, []);
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -292,6 +300,7 @@ export const GamePage = () => {
         <ResultScreen
           autoResetMs={isKiosk ? RESULT_AUTO_RESET_MS : undefined}
           onAutoReset={isKiosk ? kioskResultReset : undefined}
+          onBack={handleBackFromResult}
           result={rewardResult}
         />
       ) : null}
