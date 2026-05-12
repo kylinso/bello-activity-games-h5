@@ -14,7 +14,7 @@ import { HomeScreen } from '@/components/DemoStage';
 import { LoadingState } from '@/components/LoadingState';
 import { ResultScreen } from '@/components/ResultScreen';
 import { useIdleTimer } from '@/lib/idle-timer';
-import { IDLE_TIMEOUT_MS, isKioskMode } from '@/lib/kiosk';
+import { IDLE_TIMEOUT_MS, RESULT_AUTO_RESET_MS, isKioskMode } from '@/lib/kiosk';
 import { getRequestErrorMessage } from '@/lib/requestErrors';
 import { clearStoredAuthState, readStoredAuthState } from '@/lib/storage';
 import { useWakeLock } from '@/lib/wake-lock';
@@ -221,6 +221,11 @@ export const GamePage = () => {
     window.location.reload();
   };
 
+  const kioskResultReset = useCallback(() => {
+    clearStoredAuthState();
+    window.location.replace('/login');
+  }, []);
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -283,7 +288,13 @@ export const GamePage = () => {
           playId={playId}
         />
       ) : null}
-      {screen === 'result' && rewardResult ? <ResultScreen result={rewardResult} /> : null}
+      {screen === 'result' && rewardResult ? (
+        <ResultScreen
+          autoResetMs={isKiosk ? RESULT_AUTO_RESET_MS : undefined}
+          onAutoReset={isKiosk ? kioskResultReset : undefined}
+          result={rewardResult}
+        />
+      ) : null}
       {completedGame ? (
         <CompletionClaimModal
           completedGame={completedGame}
