@@ -39,7 +39,7 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
     >
       <div className="choice-game-header">
         <span className={isBingo ? 'choice-game-icon is-bingo' : 'choice-game-icon'}>
-          <img alt="" src={isBingo ? '/bingo/frequency.webp' : '/diamond/gem.webp'} />
+          <img alt="" src={isBingo ? '/bingo-game.webp' : '/diamond-rain.webp'} />
         </span>
         <span className="choice-game-title">
           <strong>{isBingo ? 'Bingo' : t('diamondTitle')}</strong>
