@@ -7499,3 +7499,17 @@ svg {
     pointer-events: none;
   }
 }
+
+/* Kiosk mode: 屏蔽浏览器默认手势/选择行为 */
+html.kiosk-mode,
+html.kiosk-mode body {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overscroll-behavior: contain;
+  touch-action: manipulation;
+}
+
+html.kiosk-mode * {
+  -webkit-tap-highlight-color: transparent;
+}
