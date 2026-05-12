@@ -5002,8 +5002,11 @@ svg {
 }
 
 .auth-shell.is-store-select .auth-brand img {
-  width: clamp(52px, 6.4dvh, 68px);
-  height: clamp(52px, 6.4dvh, 68px);
+  /* design spec @2x: 385 × 183 → CSS px: 192.5 × 91.5 (aspect 162/77) */
+  width: 192.5px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 162 / 77;
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.32));
   animation: none;
 }
