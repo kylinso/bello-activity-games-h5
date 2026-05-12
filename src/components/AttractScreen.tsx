@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { requestFullscreen } from '@/lib/fullscreen'
 import { formatCurrency, getRewardLabel } from '@/lib/gameRules'
 import type { ActivityConfig } from '@/types/activity'
 
@@ -97,7 +98,10 @@ export const AttractScreen = ({ config, onEnter }: AttractScreenProps) => {
 
         <button
           className="attract-cta"
-          onClick={onEnter}
+          onClick={() => {
+            void requestFullscreen()
+            onEnter()
+          }}
           type="button">
           <img
             alt=""
