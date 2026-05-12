@@ -1,12 +1,6 @@
 import { type CSSProperties, type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  formatCurrency,
-  getDiamondRainReward,
-  getDiamondRainScore,
-  normalizeDiamondResult,
-  shuffle,
-} from '@/lib/gameRules';
+import { formatCurrency, normalizeDiamondResult, shuffle } from '@/lib/gameRules';
 import type {
   ActivityConfig,
   CompletedGamePayload,
@@ -138,10 +132,12 @@ export const DiamondRainGame = ({
   const [remainingSecondsText, setRemainingSecondsText] = useState(
     (durationMs / 1000).toFixed(1),
   );
+  const [displayScore, setDisplayScore] = useState(0);
 
   const diamondsRef = useRef(0);
   const coloredRef = useRef(0);
   const bombsRef = useRef(0);
+  const displayScoreRef = useRef(0);
   const collectedRef = useRef<Set<string>>(new Set());
   const isCompleteRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
@@ -150,8 +146,13 @@ export const DiamondRainGame = ({
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  const score = getDiamondRainScore(diamonds, bombs, config.diamondRain, coloredDiamonds);
-  const scoreText = formatCurrency(score, config.bingo.currency, i18n.language);
+  // 按点击顺序累计分数：炸弹只能扣已有正分，分数下限 0
+  const adjustDisplayScore = (delta: number) => {
+    displayScoreRef.current = Math.max(0, displayScoreRef.current + delta);
+    setDisplayScore(displayScoreRef.current);
+  };
+
+  const scoreText = formatCurrency(displayScore, config.bingo.currency, i18n.language);
 
   const normalIcon = config.diamondRain.normalIcon || '/diamond/gem.webp';
   const coloredIcon = config.diamondRain.coloredIcon || normalIcon;
@@ -175,12 +176,7 @@ export const DiamondRainGame = ({
       setIsComplete(true);
 
       onCompleteTimerId = window.setTimeout(() => {
-        const finalScore = getDiamondRainReward(
-          diamondsRef.current,
-          bombsRef.current,
-          config.diamondRain,
-          coloredRef.current,
-        );
+        const finalScore = displayScoreRef.current;
         const payload = normalizeDiamondResult(
           {
             diamonds: diamondsRef.current,
@@ -191,10 +187,12 @@ export const DiamondRainGame = ({
           },
           config.diamondRain,
         );
+        // 累计分以"屏幕显示"为准，覆盖 normalize 内部的 max(0, sum) 重算
+        payload.finalScore = finalScore;
         onCompleteRef.current({
           gameType: 'diamond_rain',
           clientResult: payload,
-          rewardAmount: payload.finalScore,
+          rewardAmount: finalScore,
         });
       }, 1000);
     }, durationMs);
@@ -227,12 +225,15 @@ export const DiamondRainGame = ({
     if (item.type === 'diamond') {
       diamondsRef.current += 1;
       setDiamonds(diamondsRef.current);
+      adjustDisplayScore(config.diamondRain.diamondValue);
     } else if (item.type === 'colored') {
       coloredRef.current += 1;
       setColoredDiamonds(coloredRef.current);
+      adjustDisplayScore(config.diamondRain.coloredScore);
     } else {
       bombsRef.current += 1;
       setBombs(bombsRef.current);
+      adjustDisplayScore(config.diamondRain.bombValue);
     }
 
     const field = btn.closest('.rain-field');

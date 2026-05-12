@@ -131,6 +131,9 @@ const getRewardAmount = (config: ActivityConfig, gameType: GameType, result: Gam
   }
 
   const diamondResult = result as DiamondRainClientResult
+  if (Number.isFinite(diamondResult.finalScore)) {
+    return diamondResult.finalScore
+  }
   return getDiamondRainReward(
     diamondResult.diamonds,
     diamondResult.bombs,
