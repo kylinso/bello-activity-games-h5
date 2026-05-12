@@ -37,7 +37,7 @@ interface CollectEffect {
   label: string;
 }
 
-const FALLING_ITEM_SIZE = 62;
+const FALLING_ITEM_SIZE = 96;
 // 倒计时归零前留这么久的"收尾时间"，保证最后一颗钻石视觉上完整落到底
 const SAFETY_BUFFER_MS = 250;
 
