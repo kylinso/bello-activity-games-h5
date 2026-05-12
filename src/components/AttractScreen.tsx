@@ -1,7 +1,12 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { requestFullscreen } from '@/lib/fullscreen'
-import { formatCurrency, getRewardLabel } from '@/lib/gameRules'
+import {
+  formatCurrency,
+  getBingoRewardRange,
+  getDiamondRainRewardRange,
+  getRewardLabel,
+} from '@/lib/gameRules'
 import type { ActivityConfig } from '@/types/activity'
 
 interface AttractScreenProps {
@@ -15,8 +20,9 @@ export const AttractScreen = ({ config, onEnter }: AttractScreenProps) => {
   const { t } = useTranslation()
 
   const maxRewardText = useMemo(() => {
-    const diamondMaxScore = Math.max(config.diamondRain.minScore, config.diamondRain.diamondCount * config.diamondRain.diamondValue)
-    const maxReward = Math.max(config.bingo.maxReward, diamondMaxScore)
+    const bingoMax = getBingoRewardRange(config.bingo).max
+    const diamondMax = getDiamondRainRewardRange(config.diamondRain).max
+    const maxReward = Math.max(bingoMax, diamondMax)
 
     if (config.rewardType === 'cash_voucher') {
       return formatCurrency(maxReward, config.bingo.currency, config.locale)

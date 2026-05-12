@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { formatCurrency } from '@/lib/gameRules';
+import { formatCurrency, getBingoRewardRange, getDiamondRainRewardRange } from '@/lib/gameRules';
 import type { ActivityConfig, GameType } from '@/types/activity';
 
 interface GameChoiceCardProps {
@@ -24,12 +24,10 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
   const { t } = useTranslation();
   const isBingo = gameType === 'bingo';
   const formatAmount = (amount: number) => formatCurrency(amount, config.bingo.currency, config.locale);
-  const rewardScope = isBingo
-    ? `${formatAmount(config.bingo.minReward)}-${config.bingo.maxReward}`
-    : `${formatAmount(config.diamondRain.minScore)}-${Math.max(
-        config.diamondRain.minScore,
-        config.diamondRain.diamondCount * config.diamondRain.diamondValue,
-      )}`;
+  const rewardRange = isBingo
+    ? getBingoRewardRange(config.bingo)
+    : getDiamondRainRewardRange(config.diamondRain);
+  const rewardScope = `${formatAmount(rewardRange.min)}-${rewardRange.max}`;
   const metricValue = isBingo ? config.bingo.picksAllowed : 3;
   const metricLabel = isBingo ? t('chances') : t('secondsUnit');
 

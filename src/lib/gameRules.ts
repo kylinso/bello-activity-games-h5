@@ -39,6 +39,29 @@ export const getBingoTotal = (result: BingoClientResult) => {
   return result.selectedCells.reduce((total, cell) => total + cell.amount, 0);
 };
 
+export const getBingoRewardRange = (config: BingoConfig): { min: number; max: number } => {
+  if (config.pool.length === 0 || config.picksAllowed <= 0) {
+    return { min: config.minReward, max: config.maxReward };
+  }
+  const picks = Math.min(config.picksAllowed, config.pool.length);
+  const sortedAsc = [...config.pool].sort((a, b) => a - b);
+  const sortedDesc = [...config.pool].sort((a, b) => b - a);
+  const sum = (list: number[]) => list.slice(0, picks).reduce((total, value) => total + value, 0);
+  return {
+    min: sum(sortedAsc),
+    max: sum(sortedDesc),
+  };
+};
+
+export const getDiamondRainRewardRange = (
+  config: DiamondRainConfig,
+): { min: number; max: number } => {
+  return {
+    min: 0,
+    max: config.diamondCount * config.diamondValue + config.coloredScore,
+  };
+};
+
 export const getDiamondRainScore = (
   diamonds: number,
   bombs: number,
