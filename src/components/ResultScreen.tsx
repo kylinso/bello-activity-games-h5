@@ -12,9 +12,10 @@ interface ResultScreenProps {
 
 const getResultAmountText = (result: RewardResult) => {
   if (result.rewardType === 'cash_voucher') {
-    const normalized = result.rewardDisplayText.match(/^([A-Z]{2,4})\s+(\d+(?:\.\d+)?)$/);
-    if (normalized) {
-      return `${normalized[2]} ${normalized[1]}`;
+    // 统一展示为「单位 数字」：若服务端给 "17 RM" 则 swap 为 "RM 17"
+    const trailing = result.rewardDisplayText.match(/^(\d+(?:\.\d+)?)\s+([A-Z]{2,4})$/);
+    if (trailing) {
+      return `${trailing[2]} ${trailing[1]}`;
     }
   }
 
