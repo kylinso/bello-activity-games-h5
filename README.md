@@ -113,8 +113,8 @@ Default configuration:
   diamondValue: 1,
   bombValue: -1,
   minScore: 0,
-  fallSpeedMinMs: 6600,
-  fallSpeedMaxMs: 8600
+  fallSpeedMinMs: 4200,
+  fallSpeedMaxMs: 6200
 }
 ```
 
