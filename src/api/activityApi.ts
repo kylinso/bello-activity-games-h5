@@ -384,8 +384,8 @@ const defaultDiamondRainConfig: DiamondRainConfig = {
   diamondValue: 1,
   bombValue: -1,
   minScore: 0,
-  fallSpeedMinMs: 4200,
-  fallSpeedMaxMs: 6200,
+  fallSpeedMinMs: 3200,
+  fallSpeedMaxMs: 4800,
   coloredScore: 5,
 };
 

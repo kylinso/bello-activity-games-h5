@@ -34,6 +34,89 @@ interface CollectEffect {
 const FALLING_ITEM_SIZE = 96;
 // 倒计时归零前留这么久的"收尾时间"，保证最后一颗钻石视觉上完整落到底
 const SAFETY_BUFFER_MS = 250;
+const FALL_START_VH = -16;
+const FALL_END_VH = 110;
+const FALL_TRAVEL_VH = FALL_END_VH - FALL_START_VH;
+const FALL_LEFT_MIN_PERCENT = 8;
+const FALL_LEFT_MAX_PERCENT = 92;
+const FALL_LANE_COUNT = 7;
+const FALL_LEFT_JITTER_PERCENT = 2.5;
+const FALL_HORIZONTAL_GAP_PERCENT = 16;
+const FALL_VERTICAL_GAP_VH = 15;
+const FALL_POSITION_ATTEMPTS = 28;
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const getFallYAt = (item: FallingItem, timeMs: number) => {
+  const progress = clamp((timeMs - item.spawnAtMs) / item.durationMs, 0, 1);
+  return FALL_START_VH + FALL_TRAVEL_VH * progress;
+};
+
+const getMinVerticalGap = (leftItem: FallingItem, rightItem: FallingItem) => {
+  const overlapStart = Math.max(leftItem.spawnAtMs, rightItem.spawnAtMs);
+  const overlapEnd = Math.min(
+    leftItem.spawnAtMs + leftItem.durationMs,
+    rightItem.spawnAtMs + rightItem.durationMs,
+  );
+
+  if (overlapStart >= overlapEnd) {
+    return Infinity;
+  }
+
+  const sampleTimes = [overlapStart, overlapEnd, (overlapStart + overlapEnd) / 2];
+  const leftVelocity = FALL_TRAVEL_VH / leftItem.durationMs;
+  const rightVelocity = FALL_TRAVEL_VH / rightItem.durationMs;
+  const velocityDelta = leftVelocity - rightVelocity;
+
+  if (Math.abs(velocityDelta) > 0.0001) {
+    const closestTime =
+      (leftVelocity * leftItem.spawnAtMs - rightVelocity * rightItem.spawnAtMs) /
+      velocityDelta;
+
+    if (closestTime > overlapStart && closestTime < overlapEnd) {
+      sampleTimes.push(closestTime);
+    }
+  }
+
+  return Math.min(
+    ...sampleTimes.map((timeMs) =>
+      Math.abs(getFallYAt(leftItem, timeMs) - getFallYAt(rightItem, timeMs)),
+    ),
+  );
+};
+
+const hasVisualOverlap = (candidate: FallingItem, item: FallingItem) => {
+  const horizontalGap = Math.abs(candidate.left - item.left);
+
+  if (horizontalGap >= FALL_HORIZONTAL_GAP_PERCENT) {
+    return false;
+  }
+
+  return getMinVerticalGap(candidate, item) < FALL_VERTICAL_GAP_VH;
+};
+
+const getPlacementScore = (candidate: FallingItem, placedItems: FallingItem[]) => {
+  return placedItems.reduce((score, item) => {
+    const overlapStart = Math.max(candidate.spawnAtMs, item.spawnAtMs);
+    const overlapEnd = Math.min(
+      candidate.spawnAtMs + candidate.durationMs,
+      item.spawnAtMs + item.durationMs,
+    );
+
+    if (overlapStart >= overlapEnd) {
+      return score;
+    }
+
+    const horizontalGap = Math.abs(candidate.left - item.left);
+    const verticalGap = getMinVerticalGap(candidate, item);
+    const normalizedGap = Math.sqrt(
+      (horizontalGap / FALL_HORIZONTAL_GAP_PERCENT) ** 2 +
+        (verticalGap / FALL_VERTICAL_GAP_VH) ** 2,
+    );
+
+    return Math.min(score, normalizedGap);
+  }, Infinity);
+};
 
 const createFallingItems = (config: ActivityConfig): FallingItem[] => {
   const items: FallingItem[] = [];
@@ -54,25 +137,10 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
     ...Array.from({ length: config.diamondRain.diamondCount }, () => 'diamond' as const),
     ...Array.from({ length: config.diamondRain.bombCount }, () => 'bomb' as const),
   ]);
-  const recentLefts: number[] = [];
-
-  const getNextLeft = () => {
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      const candidate = 7 + Math.random() * 86;
-      const hasEnoughGap = recentLefts.every((left) => Math.abs(left - candidate) >= 14);
-
-      if (hasEnoughGap) {
-        recentLefts.push(candidate);
-        recentLefts.splice(0, Math.max(0, recentLefts.length - 4));
-        return candidate;
-      }
-    }
-
-    const fallback = 7 + Math.random() * 86;
-    recentLefts.push(fallback);
-    recentLefts.splice(0, Math.max(0, recentLefts.length - 4));
-    return fallback;
-  };
+  const laneLefts = Array.from({ length: FALL_LANE_COUNT }, (_, index) => {
+    const ratio = index / Math.max(FALL_LANE_COUNT - 1, 1);
+    return FALL_LEFT_MIN_PERCENT + (FALL_LEFT_MAX_PERCENT - FALL_LEFT_MIN_PERCENT) * ratio;
+  });
 
   // 计算给定 spawn 时间下，该 item 还能下落多久（不超过整局 - 收尾余量）
   const pickFallDuration = (spawnAtMs: number) => {
@@ -82,32 +150,66 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
     return minFallMs + Math.random() * span;
   };
 
+  const pickLeft = (baseItem: Omit<FallingItem, 'left'>) => {
+    let bestLeft = laneLefts[0];
+    let bestScore = -Infinity;
+    const lanes = shuffle(laneLefts);
+
+    for (let attempt = 0; attempt < FALL_POSITION_ATTEMPTS; attempt += 1) {
+      const lane = lanes[attempt % lanes.length];
+      const jitter = (Math.random() - 0.5) * FALL_LEFT_JITTER_PERCENT;
+      const left = clamp(lane + jitter, FALL_LEFT_MIN_PERCENT, FALL_LEFT_MAX_PERCENT);
+      const candidate = { ...baseItem, left };
+
+      if (!items.some((item) => hasVisualOverlap(candidate, item))) {
+        return left;
+      }
+
+      const score = getPlacementScore(candidate, items);
+      if (score > bestScore) {
+        bestLeft = left;
+        bestScore = score;
+      }
+    }
+
+    return bestLeft;
+  };
+
   for (let index = 0; index < totalItems; index += 1) {
     const type = itemTypes[index] || 'diamond';
     const spawnAtMs = Math.min(
       spawnWindowMs,
       Math.max(0, index * spacing - 320 + Math.random() * 420),
     );
-
-    items.push({
+    const durationMs = pickFallDuration(spawnAtMs);
+    const baseItem = {
       id: `${type}-${index}`,
       type,
-      left: getNextLeft(),
       size: FALLING_ITEM_SIZE,
       spawnAtMs,
-      durationMs: pickFallDuration(spawnAtMs),
+      durationMs,
+    };
+
+    items.push({
+      ...baseItem,
+      left: pickLeft(baseItem),
     });
   }
 
   // 彩钻挑 spawn 窗口偏后段出现（吊胃口效果），duration 同样 clamp 到能落完
   const coloredSpawnAt = Math.min(spawnWindowMs, spawnWindowMs * 0.6);
-  items.push({
+  const coloredDurationMs = pickFallDuration(coloredSpawnAt);
+  const coloredBaseItem = {
     id: 'colored-0',
-    type: 'colored',
-    left: getNextLeft(),
+    type: 'colored' as const,
     size: FALLING_ITEM_SIZE,
     spawnAtMs: coloredSpawnAt,
-    durationMs: pickFallDuration(coloredSpawnAt),
+    durationMs: coloredDurationMs,
+  };
+
+  items.push({
+    ...coloredBaseItem,
+    left: pickLeft(coloredBaseItem),
   });
 
   return items.sort((left, right) => left.spawnAtMs - right.spawnAtMs);
@@ -287,6 +389,8 @@ export const DiamondRainGame = ({
             height: item.size,
             '--fall-delay': `${item.spawnAtMs}ms`,
             '--fall-duration': `${item.durationMs}ms`,
+            '--fall-start': `${FALL_START_VH}vh`,
+            '--fall-end': `${FALL_END_VH}vh`,
           } as CSSProperties;
 
           return (
