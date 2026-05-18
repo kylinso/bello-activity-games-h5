@@ -7,6 +7,8 @@
 }
 
 :root {
+  --partner-banner-height: clamp(104px, 12dvh, 176px);
+  --partner-banner-font-size: clamp(18px, 2.4dvh, 32px);
   color: #10191d;
   background: #f4f8f7;
   font-family:
@@ -2871,7 +2873,7 @@ svg {
   width: 100%;
   min-height: 0;
   flex: 1 1 auto;
-  grid-template-rows: minmax(0, 1fr) clamp(104px, 12dvh, 176px);
+  grid-template-rows: minmax(0, 1fr) var(--partner-banner-height);
   gap: 0;
   overflow: hidden;
   padding: 0;
@@ -3552,8 +3554,10 @@ svg {
   place-items: center;
   border-top: 5px solid rgba(255, 223, 168, 0.9);
   color: #ffe3a6;
-  font-size: clamp(18px, 2.4dvh, 32px);
-  font-weight: 800;
+  font-family: "BelloPrize", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
+  font-size: var(--partner-banner-font-size);
+  font-weight: 900;
+  letter-spacing: clamp(1px, 0.2dvh, 2px);
   background:
     linear-gradient(90deg, transparent 0 38%, rgba(255, 226, 160, 0.14) 46%, transparent 56%),
     #7f523d;
@@ -3844,14 +3848,21 @@ svg {
   .attract-left-coins,
   .attract-right-coins,
   .attract-cta,
-  .attract-partner {
+  .attract-partner,
+  .home-partner,
+  .app-shell.is-home-selection .ad-banner {
     animation: none;
   }
 }
 
 @media (orientation: landscape) {
+  :root {
+    --partner-banner-height: clamp(72px, 10dvh, 104px);
+    --partner-banner-font-size: clamp(24px, 3.2dvh, 34px);
+  }
+
   .attract-screen {
-    grid-template-rows: minmax(0, 1fr) clamp(72px, 10dvh, 104px);
+    grid-template-rows: minmax(0, 1fr) var(--partner-banner-height);
   }
 
   .attract-content {
@@ -3950,13 +3961,18 @@ svg {
   }
 
   .attract-partner {
-    font-size: clamp(24px, 3.2dvh, 34px);
+    font-size: var(--partner-banner-font-size);
   }
 }
 
 @media (max-width: 900px) and (orientation: portrait) {
+  :root {
+    --partner-banner-height: clamp(100px, 12dvh, 142px);
+    --partner-banner-font-size: 28px;
+  }
+
   .attract-screen {
-    grid-template-rows: minmax(0, 1fr) clamp(100px, 12dvh, 142px);
+    grid-template-rows: minmax(0, 1fr) var(--partner-banner-height);
   }
 
   .attract-content {
@@ -4192,7 +4208,7 @@ svg {
 
   .attract-partner {
     border-top-width: 3px;
-    font-size: 28px;
+    font-size: var(--partner-banner-font-size);
   }
 }
 
@@ -6977,7 +6993,7 @@ svg {
 
 .choice-game-grid {
   display: grid;
-  width: min(94vw, 1260px);
+  width: min(calc(100vw - clamp(88px, 8vw, 128px)), 1220px);
   max-width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(34px, 4.8vw, 56px);
@@ -7299,20 +7315,26 @@ svg {
 }
 
 .app-shell.is-home-selection .ad-banner {
-  flex: 0 0 20dvh;
-  min-height: 150px;
-  border-top: 4px solid #edaa74;
-  color: #ffeeb8;
-  background: #80523d;
-  box-shadow: inset 0 8px 20px rgba(44, 21, 18, 0.2);
+  flex: 0 0 var(--partner-banner-height);
+  min-height: var(--partner-banner-height);
+  border-top: 5px solid rgba(255, 223, 168, 0.9);
+  color: #ffe3a6;
+  background:
+    linear-gradient(90deg, transparent 0 38%, rgba(255, 226, 160, 0.14) 46%, transparent 56%),
+    #7f523d;
+  background-size: 220% 100%;
+  box-shadow: none;
+  animation: attractPartnerSweep 5.2s ease-in-out infinite;
 }
 
 .app-shell.is-home-selection .ad-banner::before,
+.app-shell.is-home-selection .ad-banner::after,
 .app-shell.is-home-selection .banner-track {
   display: none;
 }
 
-.app-shell.is-home-selection .ad-banner::before {
+.app-shell.is-home-selection .ad-banner::before,
+.app-shell.is-home-selection .ad-banner::after {
   content: none;
 }
 
@@ -7320,7 +7342,7 @@ svg {
   display: grid;
   place-items: center;
   font-family: "BelloPrize", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
-  font-size: clamp(36px, 4.4dvh, 58px);
+  font-size: var(--partner-banner-font-size);
   font-weight: 900;
 }
 
@@ -7340,14 +7362,19 @@ svg {
   grid-row: 3;
   place-items: center;
   width: 100%;
-  height: clamp(96px, 9dvh, 144px);
+  height: var(--partner-banner-height);
   padding: clamp(10px, 1.2dvh, 18px) clamp(20px, 3vw, 40px);
-  border-top: 4px solid rgba(255, 223, 168, 0.85);
-  color: #fff6c8;
-  font-size: clamp(18px, 2.4dvh, 30px);
-  font-weight: 800;
+  border-top: 5px solid rgba(255, 223, 168, 0.9);
+  color: #ffe3a6;
+  font-family: "BelloPrize", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
+  font-size: var(--partner-banner-font-size);
+  font-weight: 900;
   letter-spacing: clamp(1px, 0.2dvh, 2px);
-  background: #7f523d;
+  background:
+    linear-gradient(90deg, transparent 0 38%, rgba(255, 226, 160, 0.14) 46%, transparent 56%),
+    #7f523d;
+  background-size: 220% 100%;
+  animation: attractPartnerSweep 5.2s ease-in-out infinite;
 }
 
 @keyframes choiceTilePulse {
@@ -7473,8 +7500,8 @@ svg {
   }
 
   .app-shell.is-home-selection .ad-banner {
-    min-height: 118px;
-    font-size: 32px;
+    min-height: var(--partner-banner-height);
+    font-size: var(--partner-banner-font-size);
   }
 }
 
@@ -7517,6 +7544,97 @@ html.kiosk-mode body {
 
 html.kiosk-mode * {
   -webkit-tap-highlight-color: transparent;
+}
+
+.fullscreen-button {
+  --fullscreen-button-width: clamp(52px, 5.2dvh, 78px);
+  --fullscreen-button-height: clamp(54px, 5.4dvh, 82px);
+
+  position: fixed;
+  top: max(clamp(12px, 1.8dvh, 26px), env(safe-area-inset-top));
+  right: max(clamp(24px, 3.4vw, 48px), env(safe-area-inset-right));
+  z-index: 80;
+  display: grid;
+  width: var(--fullscreen-button-width);
+  height: var(--fullscreen-button-height);
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  color: #593022;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 237, 192, 0.52), transparent 28%),
+    linear-gradient(180deg, #f8b36c, #de8032);
+  box-shadow:
+    0 clamp(4px, 0.55dvh, 7px) 0 rgba(90, 64, 72, 0.72),
+    0 12px 18px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 2px rgba(255, 235, 183, 0.28);
+  cursor: pointer;
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
+}
+
+#root:has(.rain-screen) .fullscreen-button {
+  --fullscreen-header-height: clamp(96px, 20vw, 320px);
+
+  top: max(
+    calc((var(--fullscreen-header-height) - var(--fullscreen-button-height)) / 2),
+    env(safe-area-inset-top)
+  );
+}
+
+.fullscreen-button:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.fullscreen-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.fullscreen-button.is-active {
+  color: #fff6c8;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 237, 192, 0.28), transparent 28%),
+    linear-gradient(180deg, #7b4931, #4a241f);
+  box-shadow:
+    0 clamp(4px, 0.55dvh, 7px) 0 rgba(36, 19, 17, 0.74),
+    0 12px 18px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 2px rgba(255, 223, 168, 0.22);
+}
+
+.fullscreen-button svg {
+  font-size: clamp(22px, 2.4dvh, 32px);
+  filter: drop-shadow(0 2px 0 rgba(255, 243, 216, 0.24));
+}
+
+.fullscreen-button span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .fullscreen-button {
+    --fullscreen-button-width: 58px;
+    --fullscreen-button-height: 62px;
+
+    top: max(clamp(12px, 1.8dvh, 22px), env(safe-area-inset-top));
+    right: max(18px, env(safe-area-inset-right));
+    border-radius: 12px;
+  }
+}
+
+@media (orientation: landscape) {
+  .fullscreen-button {
+    --fullscreen-button-width: clamp(62px, 11dvh, 88px);
+    --fullscreen-button-height: clamp(66px, 11.5dvh, 94px);
+  }
 }
 
 /* Fullscreen API 切换时 backdrop 默认黑色会闪一下，用深色主题色铺底 */

@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { FullscreenButton } from '@/components/FullscreenButton';
 import { LoadingState } from '@/components/LoadingState';
 import { hasUsableAuthState, readStoredAuthState } from '@/lib/storage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -32,20 +33,23 @@ const RootRedirect = () => {
 
 const App = () => {
   return (
-    <Suspense fallback={<LoadingState />}>
-      <Routes>
-        <Route element={<LoginPage />} path="/login" />
-        <Route
-          element={
-            <RequireAuth>
-              <GamePage />
-            </RequireAuth>
-          }
-          path="/game"
-        />
-        <Route element={<RootRedirect />} path="*" />
-      </Routes>
-    </Suspense>
+    <>
+      <FullscreenButton />
+      <Suspense fallback={<LoadingState />}>
+        <Routes>
+          <Route element={<LoginPage />} path="/login" />
+          <Route
+            element={
+              <RequireAuth>
+                <GamePage />
+              </RequireAuth>
+            }
+            path="/game"
+          />
+          <Route element={<RootRedirect />} path="*" />
+        </Routes>
+      </Suspense>
+    </>
   );
 };
 
