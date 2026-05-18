@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { ActivityApi } from '@/api/activityApi';
-import { AdBanner } from '@/components/AdBanner';
 import { AttractScreen } from '@/components/AttractScreen';
 import { BingoGame } from '@/components/BingoGame';
 import { BlockingState } from '@/components/BlockingState';
@@ -312,7 +311,6 @@ export const GamePage = () => {
           onClaim={claimReward}
         />
       ) : null}
-      {screen === 'home' ? <AdBanner config={config} /> : null}
       {toastMessage ? <div className="toast-error">{toastMessage}</div> : null}
     </div>
   );

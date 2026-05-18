@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { PartnerVideoBanner } from '@/components/PartnerVideoBanner';
 import { formatCurrency, getBingoRewardRange, getDiamondRainRewardRange } from '@/lib/gameRules';
 import type { ActivityConfig, GameType } from '@/types/activity';
 
@@ -135,9 +136,7 @@ export const HomeScreen = ({ config, onBack, onStart }: HomeScreenProps) => {
         </div>
       </section>
 
-      <section className="home-partner" aria-label={t('partnerTitle')}>
-        {t('partnerTitle')}
-      </section>
+      <PartnerVideoBanner className="home-partner" label={t('partnerTitle')} />
     </main>
   );
 };

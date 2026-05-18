@@ -6,6 +6,7 @@ import {
   getDiamondRainRewardRange,
   getRewardLabel,
 } from '@/lib/gameRules'
+import { PartnerVideoBanner } from '@/components/PartnerVideoBanner'
 import type { ActivityConfig } from '@/types/activity'
 
 interface AttractScreenProps {
@@ -108,7 +109,7 @@ export const AttractScreen = ({ config, onEnter }: AttractScreenProps) => {
         </button>
       </section>
 
-      <section className="attract-partner">{t('partnerTitle')}</section>
+      <PartnerVideoBanner className="attract-partner" label={t('partnerTitle')} />
     </main>
   )
 }
