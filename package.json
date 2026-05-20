@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --mode test",
+    "build:prod": "tsc && vite build --mode production",
     "preview": "vite preview --host 0.0.0.0",
     "type-check": "tsc --noEmit"
   },

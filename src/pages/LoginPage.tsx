@@ -21,7 +21,12 @@ import {
 import type { StoredAuthState, StoreProfile } from "@/types/auth";
 
 const COUNTRY_CODE = "+60";
-const TURNSTILE_SITE_KEY = "0x4AAAAAACJttmKPvLZt80Vf";
+const PROD_TURNSTILE_SITE_KEY = "0x4AAAAAACJttmKPvLZt80Vf";
+const TEST_TURNSTILE_SITE_KEY = "0x4AAAAAADPEo-Bv_A-eCyHS";
+const TURNSTILE_SITE_KEY =
+  import.meta.env.MODE === "production"
+    ? PROD_TURNSTILE_SITE_KEY
+    : TEST_TURNSTILE_SITE_KEY;
 
 type LoginMode = "code" | "password";
 type LoginStep = "login" | "store";

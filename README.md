@@ -82,6 +82,13 @@ VITE_DEFAULT_REGISTER_H5_URL=https://bello.example.com/register
 | `VITE_USE_MOCKS` | Uses the real API by default. Set to `true` only for local mock preview. |
 | `VITE_DEFAULT_REGISTER_H5_URL` | Registration H5 URL used by mock mode and QR generation fallback. |
 
+Build commands select the Cloudflare Turnstile site key by Vite mode:
+
+| Command | Mode | Turnstile site key |
+| --- | --- | --- |
+| `npm run build` | `test` | Test key |
+| `npm run build:prod` | `production` | Production key |
+
 ## Game Rules
 
 ### Bingo Bonus Pool
