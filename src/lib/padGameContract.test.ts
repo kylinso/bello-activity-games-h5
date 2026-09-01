@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getDiamondRainReward } from '@/lib/gameRules';
+import { getDiamondRainReward, getNextDiamondRainScore } from '@/lib/gameRules';
 import {
   createPadGameUploadForm,
   parsePadGameConfig,
@@ -318,6 +318,16 @@ describe('parsePadGameUploadResult', () => {
 
 describe('Diamond Rain scoring', () => {
   const baseConfig = parsePadGameConfig(validConfig, configContext).diamondRain;
+
+  it('does not carry bomb deductions below zero into later collections', () => {
+    const scoreAfterBombs = Array.from({ length: 3 }).reduce<number>(
+      (score) => getNextDiamondRainScore(score, 'bomb', baseConfig),
+      0,
+    );
+
+    expect(scoreAfterBombs).toBe(0);
+    expect(getNextDiamondRainScore(scoreAfterBombs, 'diamond', baseConfig)).toBe(2);
+  });
 
   it('floors the final aggregate score at zero', () => {
     expect(getDiamondRainReward(1, 2, baseConfig, 0)).toBe(0);

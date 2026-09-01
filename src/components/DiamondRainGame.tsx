@@ -2,7 +2,7 @@ import { type CSSProperties, type PointerEvent, useEffect, useMemo, useRef, useS
 import { useTranslation } from 'react-i18next';
 import {
   getColoredScoreValue,
-  getDiamondRainReward,
+  getNextDiamondRainScore,
   normalizeDiamondResult,
   shuffle,
 } from '@/lib/gameRules';
@@ -250,12 +250,11 @@ export const DiamondRainGame = ({
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  const updateDisplayScore = () => {
-    displayScoreRef.current = getDiamondRainReward(
-      diamondsRef.current,
-      bombsRef.current,
+  const updateDisplayScore = (itemType: FallingItem['type']) => {
+    displayScoreRef.current = getNextDiamondRainScore(
+      displayScoreRef.current,
+      itemType,
       config.diamondRain,
-      coloredRef.current,
     );
     setDisplayScore(displayScoreRef.current);
   };
@@ -339,7 +338,7 @@ export const DiamondRainGame = ({
       bombsRef.current += 1;
       setBombs(bombsRef.current);
     }
-    updateDisplayScore();
+    updateDisplayScore(item.type);
 
     const field = btn.closest('.rain-field');
     const fieldRect = field?.getBoundingClientRect();
