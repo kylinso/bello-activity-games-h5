@@ -1,19 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaArrowLeft } from 'react-icons/fa';
-import { createBingoGrid, formatCurrency, getBingoTotal } from '@/lib/gameRules';
+import { createBingoGrid, getBingoTotal } from '@/lib/gameRules';
 import type { ActivityConfig, BingoClientResult, CompletedGamePayload } from '@/types/activity';
 
 interface BingoGameProps {
   config: ActivityConfig;
-  playId: string;
   onComplete: (result: CompletedGamePayload) => void;
-  onError: (message: string) => void;
   onBack: () => void;
 }
 
 export const BingoGame = ({ config, onComplete, onBack }: BingoGameProps) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [grid, setGrid] = useState(() => createBingoGrid(config.bingo));
   const [selectedCells, setSelectedCells] = useState<BingoClientResult['selectedCells']>([]);
   const [lastPickedIndex, setLastPickedIndex] = useState<number | null>(null);
@@ -62,7 +60,6 @@ export const BingoGame = ({ config, onComplete, onBack }: BingoGameProps) => {
         onComplete({
           gameType: 'bingo',
           clientResult,
-          rewardAmount: getBingoTotal(clientResult),
         });
       }, 1000);
     }
@@ -85,7 +82,7 @@ export const BingoGame = ({ config, onComplete, onBack }: BingoGameProps) => {
 
       <section className="bingo-playfield">
         <div className="bingo-score-badge" aria-live="polite">
-          {formatCurrency(selectedTotal, config.bingo.currency, i18n.language)}
+          {selectedTotal}
         </div>
 
         <section className="bingo-board-frame" aria-label={t('bingoTitle')}>

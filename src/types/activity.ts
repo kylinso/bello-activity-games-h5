@@ -2,9 +2,9 @@ export type Locale = 'en' | 'zh' | 'ms';
 
 export type GameType = 'bingo' | 'diamond_rain';
 
-export type RewardType = 'cash_voucher' | 'coupon' | 'bello_points';
+export type RewardType = 'CONSUMER_POINT' | 'COUPON';
 
-export type ActivityStatus = 'active' | 'inactive';
+export type ColoredRewardType = 'SCORE' | 'CONSUMER_POINT';
 
 export interface BannerItem {
   id: string;
@@ -15,11 +15,8 @@ export interface BannerItem {
 }
 
 export interface BingoConfig {
-  gridSize: number;
-  picksAllowed: number;
-  currency: string;
-  minReward: number;
-  maxReward: number;
+  gridSize: 3;
+  picksAllowed: 3;
   pool: number[];
 }
 
@@ -29,29 +26,24 @@ export interface DiamondRainConfig {
   bombCount: number;
   diamondValue: number;
   bombValue: number;
-  minScore: number;
-  fallSpeedMinMs: number;
-  fallSpeedMaxMs: number;
+  minScore: 0;
+  coloredEnabled: boolean;
+  coloredRewardType: ColoredRewardType;
+  coloredRewardValue: number;
   normalIcon?: string;
   coloredIcon?: string;
-  coloredScore: number;
   bombIcon?: string;
 }
 
 export interface ActivityConfig {
   activityId: string;
   sessionId: string;
-  status: ActivityStatus;
-  rewardType: RewardType;
-  registerH5Url: string;
+  storeId: string;
   locale: Locale;
+  qrReturnSeconds: number;
   bingo: BingoConfig;
   diamondRain: DiamondRainConfig;
   banners: BannerItem[];
-  common?: {
-    dailyUserTotalLimit?: number;
-    qrExpireMinutes?: number;
-  };
 }
 
 export interface BingoClientResult {
@@ -64,7 +56,7 @@ export interface BingoClientResult {
 
 export interface DiamondRainClientResult {
   diamonds: number;
-  coloredDiamonds?: number;
+  coloredDiamonds: number;
   bombs: number;
   finalScore: number;
   durationMs: number;
@@ -75,20 +67,32 @@ export type GameClientResult = BingoClientResult | DiamondRainClientResult;
 export interface CompletedGamePayload {
   gameType: GameType;
   clientResult: GameClientResult;
+}
+
+interface RewardResultBase {
+  playId: string;
+  gameType: GameType;
+  claimToken: string;
+}
+
+export interface ConsumerPointRewardResult extends RewardResultBase {
+  rewardType: 'CONSUMER_POINT';
+  gameScore: number;
   rewardAmount: number;
 }
 
-export interface RewardResult {
-  playId: string;
-  gameType: GameType;
-  rewardType: RewardType;
-  rewardAmount: number;
-  rewardDisplayText: string;
-  prizeRecordId?: number | string;
-  claimToken?: string;
-  rewardCode: string;
-  qrUrl: string;
-  expiresAt: string;
+export interface CouponRewardResult extends RewardResultBase {
+  rewardType: 'COUPON';
+  couponName: string;
+}
+
+export type RewardResult = ConsumerPointRewardResult | CouponRewardResult;
+
+export interface PadGameUploadForm {
+  gameType: 1 | 2;
+  score: number;
+  extra: 0 | 1;
+  storeId: string;
 }
 
 export type BannerEventType = 'impression' | 'click';
@@ -99,6 +103,9 @@ export interface ActivityError {
     | 'SESSION_INVALID'
     | 'ALREADY_PLAYED'
     | 'CONFIG_MISSING'
+    | 'CONFIG_INVALID'
+    | 'RESULT_INVALID'
+    | 'RESPONSE_INVALID'
     | 'NETWORK_ERROR'
     | 'UNKNOWN';
   message: string;

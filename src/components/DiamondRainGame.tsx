@@ -1,6 +1,11 @@
 import { type CSSProperties, type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatCurrency, normalizeDiamondResult, shuffle } from '@/lib/gameRules';
+import {
+  getColoredScoreValue,
+  getDiamondRainReward,
+  normalizeDiamondResult,
+  shuffle,
+} from '@/lib/gameRules';
 import type {
   ActivityConfig,
   CompletedGamePayload,
@@ -8,9 +13,7 @@ import type {
 
 interface DiamondRainGameProps {
   config: ActivityConfig;
-  playId: string;
   onComplete: (result: CompletedGamePayload) => void;
-  onError: (message: string) => void;
   onBack: () => void;
 }
 
@@ -44,6 +47,8 @@ const FALL_LEFT_JITTER_PERCENT = 2.5;
 const FALL_HORIZONTAL_GAP_PERCENT = 16;
 const FALL_VERTICAL_GAP_VH = 15;
 const FALL_POSITION_ATTEMPTS = 28;
+const FALL_SPEED_MIN_MS = 3200;
+const FALL_SPEED_MAX_MS = 4800;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -122,16 +127,12 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
   const items: FallingItem[] = [];
   const totalItems = config.diamondRain.diamondCount + config.diamondRain.bombCount;
   const durationMs = config.diamondRain.durationSeconds * 1000;
+  const tailBufferMs = Math.min(SAFETY_BUFFER_MS, durationMs * 0.1);
+  const availableFallMs = Math.max(250, durationMs - tailBufferMs);
 
-  // 单个 item 至少要 fall 这么久，保证玩家有反应时间
-  const minFallMs = Math.max(1200, config.diamondRain.fallSpeedMinMs);
-  // 单个 item 最多 fall 这么久，但不超过整局时长 - 收尾余量
-  const maxFallMs = Math.max(
-    minFallMs + 600,
-    Math.min(config.diamondRain.fallSpeedMaxMs, durationMs - SAFETY_BUFFER_MS),
-  );
-  // spawn 窗口：保证最晚 spawn 的 item 仍有 minFallMs 时间能落到底
-  const spawnWindowMs = Math.max(0, durationMs - minFallMs - SAFETY_BUFFER_MS);
+  const minFallMs = Math.min(FALL_SPEED_MIN_MS, Math.max(250, availableFallMs * 0.65));
+  const maxFallMs = Math.max(minFallMs, Math.min(FALL_SPEED_MAX_MS, availableFallMs));
+  const spawnWindowMs = Math.max(0, durationMs - minFallMs - tailBufferMs);
   const spacing = spawnWindowMs / Math.max(totalItems - 1, 1);
   const itemTypes = shuffle([
     ...Array.from({ length: config.diamondRain.diamondCount }, () => 'diamond' as const),
@@ -142,9 +143,8 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
     return FALL_LEFT_MIN_PERCENT + (FALL_LEFT_MAX_PERCENT - FALL_LEFT_MIN_PERCENT) * ratio;
   });
 
-  // 计算给定 spawn 时间下，该 item 还能下落多久（不超过整局 - 收尾余量）
   const pickFallDuration = (spawnAtMs: number) => {
-    const availableMs = Math.max(minFallMs, durationMs - spawnAtMs - SAFETY_BUFFER_MS);
+    const availableMs = Math.max(minFallMs, durationMs - spawnAtMs - tailBufferMs);
     const clampedMax = Math.min(maxFallMs, availableMs);
     const span = Math.max(0, clampedMax - minFallMs);
     return minFallMs + Math.random() * span;
@@ -196,7 +196,6 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
     });
   }
 
-  // 彩钻挑 spawn 窗口偏后段出现（吊胃口效果），duration 同样 clamp 到能落完
   const coloredSpawnAt = Math.min(spawnWindowMs, spawnWindowMs * 0.6);
   const coloredDurationMs = pickFallDuration(coloredSpawnAt);
   const coloredBaseItem = {
@@ -207,10 +206,12 @@ const createFallingItems = (config: ActivityConfig): FallingItem[] => {
     durationMs: coloredDurationMs,
   };
 
-  items.push({
-    ...coloredBaseItem,
-    left: pickLeft(coloredBaseItem),
-  });
+  if (config.diamondRain.coloredEnabled) {
+    items.push({
+      ...coloredBaseItem,
+      left: pickLeft(coloredBaseItem),
+    });
+  }
 
   return items.sort((left, right) => left.spawnAtMs - right.spawnAtMs);
 };
@@ -220,10 +221,11 @@ export const DiamondRainGame = ({
   onComplete,
   onBack,
 }: DiamondRainGameProps) => {
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
   const items = useMemo(() => createFallingItems(config), [config]);
 
   const durationMs = config.diamondRain.durationSeconds * 1000;
+  const coloredScoreValue = getColoredScoreValue(config.diamondRain);
 
   const [diamonds, setDiamonds] = useState(0);
   const [coloredDiamonds, setColoredDiamonds] = useState(0);
@@ -248,13 +250,17 @@ export const DiamondRainGame = ({
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  // 按点击顺序累计分数：炸弹只能扣已有正分，分数下限 0
-  const adjustDisplayScore = (delta: number) => {
-    displayScoreRef.current = Math.max(0, displayScoreRef.current + delta);
+  const updateDisplayScore = () => {
+    displayScoreRef.current = getDiamondRainReward(
+      diamondsRef.current,
+      bombsRef.current,
+      config.diamondRain,
+      coloredRef.current,
+    );
     setDisplayScore(displayScoreRef.current);
   };
 
-  const scoreText = formatCurrency(displayScore, config.bingo.currency, i18n.language);
+  const scoreText = String(displayScore);
 
   const normalIcon = config.diamondRain.normalIcon || '/diamond/gem.webp';
   const coloredIcon = config.diamondRain.coloredIcon || normalIcon;
@@ -294,7 +300,6 @@ export const DiamondRainGame = ({
         onCompleteRef.current({
           gameType: 'diamond_rain',
           clientResult: payload,
-          rewardAmount: finalScore,
         });
       }, 1000);
     }, durationMs);
@@ -327,16 +332,14 @@ export const DiamondRainGame = ({
     if (item.type === 'diamond') {
       diamondsRef.current += 1;
       setDiamonds(diamondsRef.current);
-      adjustDisplayScore(config.diamondRain.diamondValue);
     } else if (item.type === 'colored') {
       coloredRef.current += 1;
       setColoredDiamonds(coloredRef.current);
-      adjustDisplayScore(config.diamondRain.coloredScore);
     } else {
       bombsRef.current += 1;
       setBombs(bombsRef.current);
-      adjustDisplayScore(config.diamondRain.bombValue);
     }
+    updateDisplayScore();
 
     const field = btn.closest('.rain-field');
     const fieldRect = field?.getBoundingClientRect();
@@ -348,7 +351,9 @@ export const DiamondRainGame = ({
       item.type === 'diamond'
         ? `+${config.diamondRain.diamondValue}`
         : item.type === 'colored'
-          ? `+${config.diamondRain.coloredScore}`
+          ? config.diamondRain.coloredRewardType === 'SCORE'
+            ? `+${coloredScoreValue}`
+            : 'BP'
           : `${config.diamondRain.bombValue}`;
     setEffects((current) => [...current, { id: effectId, type: item.type, x, y, label }]);
     setScorePulse(true);
@@ -440,9 +445,17 @@ export const DiamondRainGame = ({
           <span>Scene 4 · Rain ·</span>
           <img alt="" src={normalIcon} />
           <strong>+{config.diamondRain.diamondValue}</strong>
-          <span>/</span>
-          <img alt="" src={coloredIcon} />
-          <strong>+{config.diamondRain.coloredScore}</strong>
+          {config.diamondRain.coloredEnabled ? (
+            <>
+              <span>/</span>
+              <img alt="" src={coloredIcon} />
+              <strong>
+                {config.diamondRain.coloredRewardType === 'SCORE'
+                  ? `+${coloredScoreValue}`
+                  : 'BP'}
+              </strong>
+            </>
+          ) : null}
           <span>/</span>
           <img alt="" src={bombIcon} />
           <strong>{config.diamondRain.bombValue}</strong>

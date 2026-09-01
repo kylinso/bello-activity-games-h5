@@ -6,10 +6,9 @@ Bello offline activity game station H5. The page is designed for tablet and mobi
 
 - Home screen with looping auto demo: Bingo demo and Diamond Rain demo rotate automatically.
 - Game selection starts immediately. Backend validation is handled when config and result APIs are called.
-- Bingo Bonus Pool: 3 x 3 grid, pick 3 tiles, default prize pool is `5 x RM 3 + 3 x RM 4 + 1 x RM 5`.
-- Diamond Rain: default 10 seconds, 15 diamonds worth `+1`, 10 bombs worth `-1`, final score is never lower than 0.
-- Reward result page: generates a unique reward code and QR code for registration and reward claim.
-- Reward type can be configured by backend: cash voucher, coupon, or Bello Points.
+- Bingo Bonus Pool: backend-configured 3 x 3 score grid with 3 picks per round.
+- Diamond Rain: backend-configured objects, duration, and scoring; final score is never lower than 0.
+- Reward result page displays the backend-confirmed consumer-point or coupon reward and its claim QR code.
 - Bottom scrolling banner is shown only on the home screen and hidden during games.
 - Multi-language UI: English, Chinese, and Malay.
 
@@ -50,6 +49,12 @@ Run TypeScript check only:
 npm run type-check
 ```
 
+Run contract and scoring tests:
+
+```bash
+npm test
+```
+
 ## Runtime URL
 
 The activity page expects `activityId` and `sessionId` from the URL:
@@ -73,14 +78,12 @@ Available variables:
 ```bash
 VITE_API_BASE_URL=/api
 VITE_USE_MOCKS=false
-VITE_DEFAULT_REGISTER_H5_URL=https://bello.example.com/register
 ```
 
 | Variable | Description |
 | --- | --- |
 | `VITE_API_BASE_URL` | Backend API base URL. |
 | `VITE_USE_MOCKS` | Uses the real API by default. Set to `true` only for local mock preview. |
-| `VITE_DEFAULT_REGISTER_H5_URL` | Registration H5 URL used by mock mode and QR generation fallback. |
 
 Build commands select the Cloudflare Turnstile site key by Vite mode:
 
@@ -91,130 +94,20 @@ Build commands select the Cloudflare Turnstile site key by Vite mode:
 
 ## Game Rules
 
-### Bingo Bonus Pool
-
-Default configuration:
-
-```ts
-{
-  gridSize: 3,
-  picksAllowed: 3,
-  currency: 'MYR',
-  minReward: 9,
-  maxReward: 13,
-  pool: [3, 3, 3, 3, 3, 4, 4, 4, 5]
-}
-```
-
-The grid order is shuffled on the client. The reward amount is the sum of the 3 selected tiles.
-
-### Diamond Rain
-
-Default configuration:
-
-```ts
-{
-  durationSeconds: 10,
-  diamondCount: 15,
-  bombCount: 10,
-  diamondValue: 1,
-  bombValue: -1,
-  minScore: 0,
-  fallSpeedMinMs: 3200,
-  fallSpeedMaxMs: 4800
-}
-```
-
-Final score is calculated as:
-
-```ts
-max(minScore, diamonds * diamondValue + bombs * bombValue)
-```
+The backend-owned runtime configuration, client scoring rules, validation boundaries, and reward display contract are defined in [PAD Game Runtime APIs](./docs/pad-game-runtime-api.md).
 
 ## User Flow
 
-1. App reads `activityId`, `sessionId`, and current locale.
-2. App loads activity config from API or mock API.
-3. Home screen shows game choices and auto demo.
-4. User chooses either Bingo or Diamond Rain and starts playing immediately.
-5. User completes the game.
-6. App submits the client result.
-7. Backend validates eligibility and returns reward amount, reward code, QR URL, and expiry time.
-8. Result screen displays QR code.
-9. User scans QR code and continues through registration H5.
+1. The merchant signs in and selects a store.
+2. The app loads that store's game configuration and validates the fields used by the client.
+3. Immediately before a game starts, the app reloads and freezes the store and configuration for that round.
+4. The user completes Bingo or Diamond Rain, and the app automatically uploads the result once.
+5. On failure, the app shows an error and returns to game selection without retrying the same round.
+6. On success, the app displays the backend-confirmed reward and then the QR code.
 
 ## API Contract
 
-By default, the app uses the following endpoints. Set `VITE_USE_MOCKS=true` only for local mock preview.
-
-### Get Game Config
-
-```http
-GET /api/merchant/global/config
-```
-
-Query params:
-
-```ts
-{
-  storeId: string;
-  keys: 'PAD_GAME_COMMON_CONFIG,PAD_DIAMOND_RAIN_CONFIG,PAD_BINGO_CONFIG';
-}
-```
-
-Response:
-
-```ts
-{
-  PAD_GAME_COMMON_CONFIG: {
-    dailyUserTotalLimit: number;
-    qrExpireMinutes: number;
-  };
-  PAD_DIAMOND_RAIN_CONFIG: {
-    diamondCount: number;
-    bombCount: number;
-    gameTimeSeconds: number;
-    normalIcon: string;
-    coloredIcon: string;
-    coloredScore: number;
-    bombIcon: string;
-  };
-  PAD_BINGO_CONFIG: {
-    scoreBuckets: Array<{ score: number; count: number }>;
-  };
-}
-```
-
-### Submit Result
-
-```http
-POST /api/merchant/pad-game/prize/upload
-```
-
-Request:
-
-```ts
-{
-  // 1 = Diamond Rain, 2 = Bingo
-  gameType: 1 | 2;
-  score: number;
-  storeId: string;
-}
-```
-
-Response:
-
-```ts
-{
-  code: 0;
-  msg: string;
-  data: {
-    prizeRecordId: number;
-    claimToken: string;
-    expireTime: string;
-  };
-}
-```
+The game configuration and prize upload contracts have one source of truth: [PAD Game Runtime APIs](./docs/pad-game-runtime-api.md). Set `VITE_USE_MOCKS=true` only for local mock preview.
 
 ### Track Banner Event
 
@@ -264,7 +157,6 @@ Game eligibility and reward claim state are handled by backend APIs. Choosing a 
 - `dist/` is ignored by Git and should be produced by the deployment pipeline.
 - Keep `VITE_USE_MOCKS=false` or unset for real backend integration.
 - Configure `VITE_API_BASE_URL` to point to the deployed API gateway.
-- Configure `VITE_DEFAULT_REGISTER_H5_URL` or return `registerH5Url` from the backend config.
 
 ## Verification Checklist
 
@@ -274,6 +166,8 @@ Game eligibility and reward claim state are handled by backend APIs. Choosing a 
 - Choosing a game starts it without calling a start-session API.
 - Bingo allows exactly 3 tile picks.
 - Diamond Rain score never goes below 0.
-- Result page shows reward amount, reward code, QR code, and expiry time.
-- QR code opens the registration H5 URL with `claimToken`, `rewardCode`, `sessionId`, and `activityId`.
+- Invalid or missing required game configuration prevents a round from starting.
+- Game result upload happens once after completion and is never retried for the same round.
+- Coupon rewards display the coupon name; consumer-point rewards display the backend-confirmed total.
+- The QR code contains the raw `claimToken` and returns to game selection according to `qrReturnSeconds`.
 - `npm run build` completes successfully.

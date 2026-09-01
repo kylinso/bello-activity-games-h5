@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { PartnerVideoBanner } from '@/components/PartnerVideoBanner';
-import { formatCurrency, getBingoRewardRange, getDiamondRainRewardRange } from '@/lib/gameRules';
+import { getBingoScoreRange, getDiamondRainScoreRange } from '@/lib/gameRules';
 import type { ActivityConfig, GameType } from '@/types/activity';
 
 interface GameChoiceCardProps {
   config: ActivityConfig;
   gameType: GameType;
+  isDisabled?: boolean;
   isPrimary?: boolean;
   onSelect: (gameType: GameType) => void;
 }
@@ -21,20 +22,21 @@ const rainDrops = [
   { left: 34, top: 92, type: 'bomb', delay: '-1.1s' },
 ];
 
-const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCardProps) => {
+const GameChoiceCard = ({ config, gameType, isDisabled, isPrimary, onSelect }: GameChoiceCardProps) => {
   const { t } = useTranslation();
   const isBingo = gameType === 'bingo';
-  const formatAmount = (amount: number) => formatCurrency(amount, config.bingo.currency, config.locale);
-  const rewardRange = isBingo
-    ? getBingoRewardRange(config.bingo)
-    : getDiamondRainRewardRange(config.diamondRain);
-  const rewardScope = `${formatAmount(rewardRange.min)}-${rewardRange.max}`;
-  const metricValue = isBingo ? config.bingo.picksAllowed : 3;
+  const formatAmount = (amount: number) => String(amount);
+  const scoreRange = isBingo
+    ? getBingoScoreRange(config.bingo)
+    : getDiamondRainScoreRange(config.diamondRain);
+  const scoreScope = `${formatAmount(scoreRange.min)}-${scoreRange.max}`;
+  const metricValue = isBingo ? config.bingo.picksAllowed : config.diamondRain.durationSeconds;
   const metricLabel = isBingo ? t('chances') : t('secondsUnit');
 
   return (
     <button
       className={isPrimary ? 'choice-game-card is-primary' : 'choice-game-card'}
+      disabled={isDisabled}
       onClick={() => onSelect(gameType)}
       type="button"
     >
@@ -44,7 +46,11 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
         </span>
         <span className="choice-game-title">
           <strong>{isBingo ? 'Bingo' : t('diamondTitle')}</strong>
-          <small>{isBingo ? '3 Picks · 3 Chances' : '10 s · Catch & Dodge'}</small>
+          <small>
+            {isBingo
+              ? '3 Picks · 3 Chances'
+              : `${config.diamondRain.durationSeconds} s · Catch & Dodge`}
+          </small>
         </span>
       </div>
 
@@ -99,7 +105,7 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
 
       <div className="choice-game-stats">
         <span>
-          <strong>{rewardScope}</strong>
+          <strong>{scoreScope}</strong>
           <small>{t('rewardScope')}</small>
         </span>
         <span>
@@ -113,11 +119,12 @@ const GameChoiceCard = ({ config, gameType, isPrimary, onSelect }: GameChoiceCar
 
 interface HomeScreenProps {
   config: ActivityConfig;
+  isStarting?: boolean;
   onBack: () => void;
   onStart: (gameType: GameType) => void;
 }
 
-export const HomeScreen = ({ config, onBack, onStart }: HomeScreenProps) => {
+export const HomeScreen = ({ config, isStarting, onBack, onStart }: HomeScreenProps) => {
   const { t } = useTranslation();
 
   return (
@@ -131,8 +138,18 @@ export const HomeScreen = ({ config, onBack, onStart }: HomeScreenProps) => {
       <section className="home-game-stage">
         <h1>Choose Your Game</h1>
         <div className="choice-game-grid">
-          <GameChoiceCard config={config} gameType="bingo" onSelect={onStart} />
-          <GameChoiceCard config={config} gameType="diamond_rain" onSelect={onStart} />
+          <GameChoiceCard
+            config={config}
+            gameType="bingo"
+            isDisabled={isStarting}
+            onSelect={onStart}
+          />
+          <GameChoiceCard
+            config={config}
+            gameType="diamond_rain"
+            isDisabled={isStarting}
+            onSelect={onStart}
+          />
         </div>
       </section>
 
