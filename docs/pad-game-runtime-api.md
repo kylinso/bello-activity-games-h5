@@ -38,7 +38,7 @@ GET /merchant/global/pad-game-config
 - 非法配置不能回退到前端默认游戏规则。
 - 图标字段沿用当前本地素材兜底，是唯一允许的字段级兜底。
 - `qrReturnSeconds` 必须是大于或等于 `0` 的整数。
-- `diamondCount` 和 `bombCount` 必须是大于或等于 `0` 的整数；`gameTimeSeconds` 必须是正整数。
+- `diamondCount` 和 `bombCount` 必须是大于或等于 `0` 的 int32；前端不额外设置业务数量上限，由后端配置控制。`gameTimeSeconds` 必须是正整数。
 - `diamondScore` 和 `coloredRewardValue` 必须是大于或等于 `0` 的整数；`bombDeductScore` 必须是正整数。
 - `coloredEnabled` 必须是布尔值，`coloredRewardType` 只接受 `SCORE` 或 `CONSUMER_POINT`。
 - 每个 `scoreBuckets[].score` 必须是大于或等于 `0` 的整数，每个 `count` 必须是正整数，展开后的格子总数必须恰好为 `9`。
@@ -51,7 +51,7 @@ GET /merchant/global/pad-game-config
 
 | 字段 | 前端行为 |
 | --- | --- |
-| `qrReturnSeconds` | 二维码结果页完成展示后开始倒计时。倒计时结束且用户未手动返回时，自动返回游戏选择页；所有使用二维码的模式都生效。值为 `0` 时不自动返回。 |
+| `qrReturnSeconds` | 二维码结果页完成展示后开始倒计时。倒计时结束且用户未手动返回时，自动返回游戏选择页；所有使用二维码的模式都生效。值为 `0` 时不自动返回。Kiosk 模式仍受全局空闲登出控制，空闲登出优先于该倒计时。 |
 
 #### Diamond Rain
 

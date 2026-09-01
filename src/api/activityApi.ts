@@ -6,6 +6,7 @@ import {
   parsePadGameConfig,
   parsePadGameUploadResult,
 } from '@/lib/padGameContract';
+import { normalizeRequestError } from '@/lib/requestErrors';
 import { readStoredAuthState } from '@/lib/storage';
 import type {
   ActivityConfig,
@@ -56,29 +57,6 @@ interface PassportLoginData {
 interface StorePageData {
   records?: MerchantStoreRecord[];
 }
-
-const toNetworkError = () => ({
-  code: 'NETWORK_ERROR' as const,
-  message: 'Network request failed.',
-});
-
-const toRequestError = (error: unknown) => {
-  if (error && typeof error === 'object' && 'code' in error && 'message' in error) {
-    return error;
-  }
-
-  if (axios.isAxiosError(error)) {
-    const responseData = error.response?.data as Partial<ApiEnvelope> | undefined;
-    if (responseData?.msg) {
-      return {
-        code: 'UNKNOWN' as const,
-        message: responseData.msg,
-      };
-    }
-  }
-
-  return toNetworkError();
-};
 
 const assertOk = <T>(payload: ApiEnvelope<T>) => {
   if (payload.code !== 0) {
@@ -209,7 +187,7 @@ export const ActivityApi = {
       });
       assertOk(response.data);
     } catch (requestError) {
-      throw toRequestError(requestError);
+      throw normalizeRequestError(requestError);
     }
   },
 
@@ -231,7 +209,7 @@ export const ActivityApi = {
       );
       return toLoginResponse(params, assertOk(response.data));
     } catch (requestError) {
-      throw toRequestError(requestError);
+      throw normalizeRequestError(requestError);
     }
   },
 
@@ -253,7 +231,7 @@ export const ActivityApi = {
       );
       return toLoginResponse(params, assertOk(response.data));
     } catch (requestError) {
-      throw toRequestError(requestError);
+      throw normalizeRequestError(requestError);
     }
   },
 
@@ -277,7 +255,7 @@ export const ActivityApi = {
       const data = assertOk(response.data);
       return (data?.records || []).map(toStoreProfile);
     } catch (requestError) {
-      throw toRequestError(requestError);
+      throw normalizeRequestError(requestError);
     }
   },
 
@@ -301,7 +279,7 @@ export const ActivityApi = {
       );
       return parsePadGameConfig(assertOk(response.data), params);
     } catch (requestError) {
-      throw toRequestError(requestError);
+      throw normalizeRequestError(requestError);
     }
   },
 
@@ -330,7 +308,7 @@ export const ActivityApi = {
       );
       return parsePadGameUploadResult(assertOk(response.data), { playId, gameType });
     } catch (requestError) {
-      throw toRequestError(requestError);
+      throw normalizeRequestError(requestError);
     }
   },
 

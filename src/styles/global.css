@@ -6461,6 +6461,7 @@ svg {
   align-content: center;
   gap: clamp(6px, 1dvh, 12px);
   color: #ffc096;
+  overflow: hidden;
   text-align: center;
   pointer-events: none;
 }
@@ -6475,6 +6476,22 @@ svg {
   text-shadow:
     0 4px 0 rgba(77, 41, 30, 0.26),
     0 0 18px rgba(255, 150, 72, 0.12);
+}
+
+.claim-modal-reward.is-coupon {
+  top: 39.5%;
+  height: 29%;
+}
+
+.claim-modal-reward.is-coupon strong {
+  display: -webkit-box;
+  max-height: 3.15em;
+  overflow: hidden;
+  font-size: clamp(18px, 3.4dvh, 40px);
+  line-height: 1.05;
+  text-wrap: balance;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .claim-modal-reward span {
@@ -6593,7 +6610,9 @@ svg {
 /* Final QR claim result page. */
 .app-shell.is-result {
   height: 100dvh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
   background: #261515;
 }
 
@@ -6609,12 +6628,11 @@ svg {
   position: relative;
   display: grid;
   width: 100%;
-  height: 100dvh;
-  min-height: 0;
+  min-height: 100dvh;
   grid-template-rows: clamp(88px, 9.4dvh, 132px) minmax(0, 1fr);
   place-items: stretch;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   color: #fff6c8;
   background:
     url("/home-bg.webp") center top / cover no-repeat,

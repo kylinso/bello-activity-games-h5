@@ -105,7 +105,14 @@ export const GamePage = () => {
   const [isStartingGame, setIsStartingGame] = useState(false);
   const [isSubmittingResult, setIsSubmittingResult] = useState(false);
   const isStartingGameRef = useRef(false);
+  const startGameAttemptRef = useRef(0);
   const submittedPlayId = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      startGameAttemptRef.current += 1;
+    };
+  }, []);
 
   const logoutForMissingConfig = useCallback(() => {
     clearStoredAuthState();
@@ -141,13 +148,14 @@ export const GamePage = () => {
           return;
         }
 
-        console.error('[PAD Game] Failed to load game configuration.', requestError);
+        const requestMessage = getRequestErrorMessage(requestError, fixedT('configFailed'));
+        console.error('[PAD Game] Failed to load game configuration.', requestMessage);
         if (isActivityError(requestError) && requestError.code === 'CONFIG_MISSING') {
           logoutForMissingConfig();
           return;
         }
 
-        setError(getRequestErrorMessage(requestError, fixedT('configFailed')));
+        setError(requestMessage);
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -183,6 +191,7 @@ export const GamePage = () => {
       }
 
       isStartingGameRef.current = true;
+      const attemptId = ++startGameAttemptRef.current;
       setIsStartingGame(true);
       setToastMessage('');
       setRewardResult(null);
@@ -194,22 +203,36 @@ export const GamePage = () => {
           sessionId,
           storeId,
         });
+        if (attemptId !== startGameAttemptRef.current) {
+          return;
+        }
+
         const playId = `${sessionId}-${gameType}-${Date.now()}`;
         submittedPlayId.current = null;
         setConfig(roundConfig);
         setRound({ config: roundConfig, gameType, playId, storeId });
         setScreen(gameType);
       } catch (requestError) {
-        console.error('[PAD Game] Failed to refresh configuration before game start.', requestError);
+        if (attemptId !== startGameAttemptRef.current) {
+          return;
+        }
+
+        const requestMessage = getRequestErrorMessage(requestError, t('configFailed'));
+        console.error(
+          '[PAD Game] Failed to refresh configuration before game start.',
+          requestMessage,
+        );
         if (isActivityError(requestError) && requestError.code === 'CONFIG_MISSING') {
           logoutForMissingConfig();
           return;
         }
 
-        setToastMessage(getRequestErrorMessage(requestError, t('configFailed')));
+        setToastMessage(requestMessage);
       } finally {
-        isStartingGameRef.current = false;
-        setIsStartingGame(false);
+        if (attemptId === startGameAttemptRef.current) {
+          isStartingGameRef.current = false;
+          setIsStartingGame(false);
+        }
       }
     },
     [activityId, config, locale, logoutForMissingConfig, sessionId, storeId, t],
@@ -238,16 +261,15 @@ export const GamePage = () => {
         });
         setRewardResult(result);
       } catch (requestError) {
+        const requestMessage = getRequestErrorMessage(requestError, t('uploadFailed'));
         console.error('[PAD Game] Failed to upload or parse the game result.', {
-          error: requestError,
           gameType: round.gameType,
-          playId: round.playId,
-          storeId: round.storeId,
+          message: requestMessage,
         });
         setRound(null);
         setRewardResult(null);
         setScreen('home');
-        setToastMessage(getRequestErrorMessage(requestError, t('uploadFailed')));
+        setToastMessage(requestMessage);
       } finally {
         setIsSubmittingResult(false);
       }
@@ -260,6 +282,13 @@ export const GamePage = () => {
     window.localStorage.removeItem('bello-activity-demo-session');
     window.location.reload();
   };
+
+  const handleBackFromHome = useCallback(() => {
+    startGameAttemptRef.current += 1;
+    isStartingGameRef.current = false;
+    setIsStartingGame(false);
+    setScreen('attract');
+  }, []);
 
   const handleBackFromGame = useCallback(() => {
     setRound(null);
@@ -317,7 +346,7 @@ export const GamePage = () => {
         <HomeScreen
           config={config}
           isStarting={isStartingGame}
-          onBack={() => setScreen('attract')}
+          onBack={handleBackFromHome}
           onStart={startGame}
         />
       ) : null}

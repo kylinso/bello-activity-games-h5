@@ -30,12 +30,9 @@ const confettiPieces = Array.from({ length: 72 }, (_, index) => {
 
 export const CompletionClaimModal = ({ result, onClaim }: CompletionClaimModalProps) => {
   const { t } = useTranslation();
-  const amountText =
-    result.rewardType === 'COUPON' ? result.couponName : `${result.rewardAmount} BP`;
-  const detailText =
-    result.rewardType === 'COUPON'
-      ? t('coupon')
-      : `${t('gameScoreLabel')}: ${result.gameScore}`;
+  const isCoupon = result.rewardType === 'COUPON';
+  const amountText = isCoupon ? result.couponName : `${result.rewardAmount} BP`;
+  const detailText = isCoupon ? t('coupon') : `${t('gameScoreLabel')}: ${result.gameScore}`;
 
   return (
     <div className="claim-modal-layer" role="presentation">
@@ -66,7 +63,10 @@ export const CompletionClaimModal = ({ result, onClaim }: CompletionClaimModalPr
         role="dialog"
       >
         <img alt="" className="claim-modal-panel" src="/claim-modal/panel.webp" />
-        <div className="claim-modal-reward" aria-live="polite">
+        <div
+          className={`claim-modal-reward${isCoupon ? ' is-coupon' : ''}`}
+          aria-live="polite"
+        >
           <strong>{amountText}</strong>
           <span>{detailText}</span>
         </div>
