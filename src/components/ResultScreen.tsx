@@ -11,24 +11,16 @@ interface ResultScreenProps {
   onBack?: () => void;
 }
 
-const getResultAmountText = (result: RewardResult) => {
-  if (result.rewardType === 'cash_voucher') {
-    // 统一展示为「单位 数字」：若服务端给 "17 RM" 则 swap 为 "RM 17"
-    const trailing = result.rewardDisplayText.match(/^(\d+(?:\.\d+)?)\s+([A-Z]{2,4})$/);
-    if (trailing) {
-      return `${trailing[2]} ${trailing[1]}`;
-    }
-  }
-
-  return result.rewardDisplayText;
-};
-
 export const ResultScreen = ({ result, autoResetMs, onAutoReset, onBack }: ResultScreenProps) => {
   const { t } = useTranslation();
-  const claimLink = result.claimToken || result.qrUrl;
+  const isCoupon = result.rewardType === 'COUPON';
+  const resultText = isCoupon ? result.couponName : `${result.rewardAmount} BP`;
 
   useEffect(() => {
-    if (!autoResetMs || !onAutoReset) return;
+    if (!autoResetMs || !onAutoReset) {
+      return;
+    }
+
     const timerId = window.setTimeout(onAutoReset, autoResetMs);
     return () => window.clearTimeout(timerId);
   }, [autoResetMs, onAutoReset]);
@@ -48,17 +40,14 @@ export const ResultScreen = ({ result, autoResetMs, onAutoReset, onBack }: Resul
 
       <section className="result-claim-stage" aria-label={t('resultTitle')}>
         <div className="result-claim-copy">
-          <h1>{t('resultClaimTitle')}</h1>
-          <strong>{getResultAmountText(result)}</strong>
+          <h1>{t(isCoupon ? 'resultVoucherClaimTitle' : 'resultClaimTitle')}</h1>
+          <strong>{resultText}</strong>
+          {result.rewardType === 'CONSUMER_POINT' ? (
+            <small>{t('gameScoreLabel')}: {result.gameScore}</small>
+          ) : null}
         </div>
 
-        <a
-          aria-label={t('openRegister')}
-          className="result-qr-frame"
-          href={claimLink}
-          rel="noreferrer"
-          target="_blank"
-        >
+        <div aria-label={t('rewardCode')} className="result-qr-frame">
           <QRCodeSVG
             bgColor="#FFFFFF"
             fgColor="#FF6B00"
@@ -70,13 +59,13 @@ export const ResultScreen = ({ result, autoResetMs, onAutoReset, onBack }: Resul
             }}
             level="M"
             size={312}
-            value={claimLink}
+            value={result.claimToken}
           />
-        </a>
+        </div>
 
         <div className="result-flow-copy">
           <h2>{t('resultFlowTitle')}</h2>
-          <p>{t('resultFlowDescription')}</p>
+          <p>{t(isCoupon ? 'resultVoucherFlowDescription' : 'resultFlowDescription')}</p>
         </div>
       </section>
     </main>

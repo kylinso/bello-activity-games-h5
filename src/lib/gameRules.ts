@@ -3,8 +3,6 @@ import type {
   BingoConfig,
   DiamondRainClientResult,
   DiamondRainConfig,
-  GameType,
-  RewardType,
 } from '@/types/activity';
 
 export const clamp = (value: number, min: number, max: number) => {
@@ -21,14 +19,7 @@ export const shuffle = <T,>(items: T[]) => {
 };
 
 export const createBingoGrid = (config: BingoConfig) => {
-  const expectedCells = config.gridSize * config.gridSize;
-  const pool = config.pool.slice(0, expectedCells);
-
-  while (pool.length < expectedCells) {
-    pool.push(config.minReward);
-  }
-
-  return shuffle(pool).map((amount, index) => ({
+  return shuffle(config.pool).map((amount, index) => ({
     index,
     amount,
     revealed: false,
@@ -39,26 +30,31 @@ export const getBingoTotal = (result: BingoClientResult) => {
   return result.selectedCells.reduce((total, cell) => total + cell.amount, 0);
 };
 
-export const getBingoRewardRange = (config: BingoConfig): { min: number; max: number } => {
-  if (config.pool.length === 0 || config.picksAllowed <= 0) {
-    return { min: config.minReward, max: config.maxReward };
-  }
-  const picks = Math.min(config.picksAllowed, config.pool.length);
+export const getBingoScoreRange = (config: BingoConfig): { min: number; max: number } => {
   const sortedAsc = [...config.pool].sort((a, b) => a - b);
   const sortedDesc = [...config.pool].sort((a, b) => b - a);
-  const sum = (list: number[]) => list.slice(0, picks).reduce((total, value) => total + value, 0);
+  const sum = (list: number[]) => {
+    return list.slice(0, config.picksAllowed).reduce((total, value) => total + value, 0);
+  };
+
   return {
     min: sum(sortedAsc),
     max: sum(sortedDesc),
   };
 };
 
-export const getDiamondRainRewardRange = (
+export const getColoredScoreValue = (config: DiamondRainConfig) => {
+  return config.coloredEnabled && config.coloredRewardType === 'SCORE'
+    ? config.coloredRewardValue
+    : 0;
+};
+
+export const getDiamondRainScoreRange = (
   config: DiamondRainConfig,
 ): { min: number; max: number } => {
   return {
     min: 0,
-    max: config.diamondCount * config.diamondValue + config.coloredScore,
+    max: config.diamondCount * config.diamondValue + getColoredScoreValue(config),
   };
 };
 
@@ -70,7 +66,7 @@ export const getDiamondRainScore = (
 ) => {
   return (
     diamonds * config.diamondValue +
-    coloredDiamonds * config.coloredScore +
+    coloredDiamonds * getColoredScoreValue(config) +
     bombs * config.bombValue
   );
 };
@@ -84,46 +80,12 @@ export const getDiamondRainReward = (
   return Math.max(0, getDiamondRainScore(diamonds, bombs, config, coloredDiamonds));
 };
 
-export const createRewardCode = (gameType: GameType) => {
-  const prefix = gameType === 'bingo' ? 'BNG' : 'DMR';
-  const body = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `${prefix}-${Date.now().toString(36).toUpperCase()}-${body}`;
-};
-
-export const formatCurrency = (amount: number, currency: string, locale: string) => {
-  if (currency.toUpperCase() === 'MYR') {
-    return `RM ${amount}`;
-  }
-
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  } catch {
-    return `${currency} ${amount}`;
-  }
-};
-
-export const getRewardLabel = (rewardType: RewardType) => {
-  if (rewardType === 'cash_voucher') {
-    return 'Cash voucher';
-  }
-
-  if (rewardType === 'coupon') {
-    return 'Coupon';
-  }
-
-  return 'Bello Points';
-};
-
 export const normalizeDiamondResult = (
   result: DiamondRainClientResult,
   config: DiamondRainConfig,
 ): DiamondRainClientResult => {
   const diamonds = clamp(result.diamonds, 0, config.diamondCount);
-  const coloredDiamonds = clamp(result.coloredDiamonds || 0, 0, 1);
+  const coloredDiamonds = clamp(result.coloredDiamonds, 0, config.coloredEnabled ? 1 : 0);
   const bombs = clamp(result.bombs, 0, config.bombCount);
   return {
     ...result,
@@ -132,27 +94,4 @@ export const normalizeDiamondResult = (
     bombs,
     finalScore: getDiamondRainReward(diamonds, bombs, config, coloredDiamonds),
   };
-};
-
-export const buildRewardQrUrl = ({
-  registerH5Url,
-  rewardCode,
-  claimToken,
-  sessionId,
-  activityId,
-}: {
-  registerH5Url: string;
-  rewardCode: string;
-  claimToken?: string;
-  sessionId: string;
-  activityId: string;
-}) => {
-  const url = new URL(registerH5Url, window.location.origin);
-  url.searchParams.set('rewardCode', rewardCode);
-  if (claimToken) {
-    url.searchParams.set('claimToken', claimToken);
-  }
-  url.searchParams.set('sessionId', sessionId);
-  url.searchParams.set('activityId', activityId);
-  return url.toString();
 };

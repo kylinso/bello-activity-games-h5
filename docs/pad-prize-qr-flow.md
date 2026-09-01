@@ -1,95 +1,28 @@
 # PAD Prize QR Flow
 
-## Conclusion
+奖品上传请求与响应的唯一字段契约见 [PAD Game Runtime APIs](./pad-game-runtime-api.md#上传游戏结果并生成二维码令牌)。本文档只记录二维码领取的职责边界，避免复制接口定义。
 
-PAD frontend can display a QR code after receiving the prize upload response from backend, but the QR code content should be a standard, accessible URL instead of only a raw `claimToken` or `prizeRecordId`.
+## PAD 流程
 
-Recommended QR content:
+1. 使用本局固定配置计算客户端最终分数和彩钻结果。
+2. 游戏结束后自动上传结果，由后端完成资格、额度、奖励区间和 Jackpot 处理。
+3. 上传成功后显示完成弹窗；“Scan to claim” 按钮只进入二维码结果页，不重复上传。
+4. 直接使用原始 `claimToken` 作为二维码内容。
+5. 二维码结果页展示完成后启动返回倒计时；用户未手动返回且配置值不为 `0` 时，自动返回游戏选择页。
 
-```text
-https://h5.bello.network/pad-prize/claim?claimToken=xxx&prizeRecordId=123
-```
+上传失败或响应校验失败时弹出错误提示并返回游戏选择页，不重复提交同一局结果。奖励字段、分支校验和展示公式统一由运行时 API 契约定义。
 
-Using a URL makes the QR code recognizable by normal phone camera apps. It also gives Bello H5 and Bello APP one shared entry point for claim handling.
+## 职责边界
 
-## Backend Response
+PAD 负责：
 
-Current prize upload response:
+- 提交客户端游戏结果和彩钻信息。
+- 根据奖品上传响应展示奖励。
+- 展示二维码和处理自动返回。
 
-```json
-{
-  "code": 0,
-  "msg": "",
-  "data": {
-    "prizeRecordId": 0,
-    "claimToken": "",
-    "expireTime": ""
-  }
-}
-```
+后端、领取 H5 和 APP 负责：
 
-PAD frontend should use `claimToken` and `prizeRecordId` to generate the QR URL. `expireTime` should be displayed as the QR or prize claim expiration time.
-
-## Scan Behavior
-
-### Phone System Camera
-
-If the QR code content is a URL, the phone system camera can recognize it and open the H5 page.
-
-Expected path:
-
-1. User scans QR code with phone camera.
-2. Browser opens the H5 claim page.
-3. H5 handles registration, download, or claim flow based on user state.
-
-### Bello APP Scanner
-
-The APP can scan the same QR code and identify the URL or token.
-
-Expected path:
-
-1. User scans QR code inside Bello APP.
-2. APP parses `claimToken` and `prizeRecordId`.
-3. APP checks whether the prize can be claimed.
-4. If claimable, APP issues the prize and navigates to the claim result page.
-5. If not claimable, APP marks the prize record as invalid or expired and still navigates to the claim result page.
-
-## H5 Flow
-
-The H5 claim page should be the unified web entry.
-
-Recommended behavior:
-
-1. User opens the H5 claim URL from QR code.
-2. H5 checks whether the phone number or account is registered.
-3. If the user is not registered, H5 shows the registration page.
-4. After successful registration, backend issues the prize and H5 redirects to the download page to guide APP installation.
-5. If the phone number is already registered, H5 redirects to the download page or attempts to open APP.
-6. If conditions are met, the prize is issued to the user.
-
-## Implementation Requirement
-
-PAD only needs to:
-
-1. Submit game result to backend.
-2. Receive `prizeRecordId`, `claimToken`, and `expireTime`.
-3. Generate a QR code with the official H5 claim URL.
-4. Display the QR code and expiration time.
-
-Backend, H5, and APP should own:
-
-1. Claim eligibility validation.
-2. Registration state checking.
-3. Prize issuing.
-4. Expiration handling.
-5. Claim result page routing.
-
-## Pending Alignment
-
-The final H5 claim URL domain and path still need to be confirmed.
-
-Once confirmed, PAD frontend should replace the current temporary `registerH5Url` QR generation with the official claim URL, for example:
-
-```text
-https://h5.bello.network/pad-prize/claim
-```
+- 游戏资格、次数、频率和奖励额度校验。
+- 奖励区间匹配与 Jackpot 判定。
+- 注册状态检查和奖品发放。
+- 令牌过期与领取结果处理。

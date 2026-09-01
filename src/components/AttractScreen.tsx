@@ -1,10 +1,8 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  formatCurrency,
-  getBingoRewardRange,
-  getDiamondRainRewardRange,
-  getRewardLabel,
+  getBingoScoreRange,
+  getDiamondRainScoreRange,
 } from '@/lib/gameRules'
 import { PartnerVideoBanner } from '@/components/PartnerVideoBanner'
 import type { ActivityConfig } from '@/types/activity'
@@ -19,20 +17,10 @@ const attractDemoVideoSrc = '/attract-demo.mp4'
 export const AttractScreen = ({ config, onEnter }: AttractScreenProps) => {
   const { t } = useTranslation()
 
-  const maxRewardText = useMemo(() => {
-    const bingoMax = getBingoRewardRange(config.bingo).max
-    const diamondMax = getDiamondRainRewardRange(config.diamondRain).max
-    const maxReward = Math.max(bingoMax, diamondMax)
-
-    if (config.rewardType === 'cash_voucher') {
-      return formatCurrency(maxReward, config.bingo.currency, config.locale)
-    }
-
-    if (config.rewardType === 'bello_points') {
-      return `${maxReward} BP`
-    }
-
-    return `${maxReward}x`
+  const maxScoreText = useMemo(() => {
+    const bingoMax = getBingoScoreRange(config.bingo).max
+    const diamondMax = getDiamondRainScoreRange(config.diamondRain).max
+    return String(Math.max(bingoMax, diamondMax))
   }, [config])
 
   return (
@@ -56,13 +44,12 @@ export const AttractScreen = ({ config, onEnter }: AttractScreenProps) => {
           />
           <span
             aria-label={t('attractWinUpTo', {
-              amount: maxRewardText,
-              reward: t(config.rewardType) || getRewardLabel(config.rewardType),
+              amount: maxScoreText,
             })}
             className="attract-title-prize"
           >
             <span className="attract-title-prize-prefix">{t('attractWinUpToPrefix')}</span>
-            <span className="attract-title-prize-amount">{maxRewardText}</span>
+            <span className="attract-title-prize-amount">{maxScoreText}</span>
           </span>
         </section>
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { ActivityApi } from '@/api/activityApi';
@@ -13,7 +13,7 @@ import { HomeScreen } from '@/components/DemoStage';
 import { LoadingState } from '@/components/LoadingState';
 import { ResultScreen } from '@/components/ResultScreen';
 import { useIdleTimer } from '@/lib/idle-timer';
-import { IDLE_TIMEOUT_MS, RESULT_AUTO_RESET_MS, isKioskMode } from '@/lib/kiosk';
+import { IDLE_TIMEOUT_MS, isKioskMode } from '@/lib/kiosk';
 import { getRequestErrorMessage } from '@/lib/requestErrors';
 import { clearStoredAuthState, readStoredAuthState } from '@/lib/storage';
 import { useWakeLock } from '@/lib/wake-lock';
@@ -28,6 +28,13 @@ import { isActivityError } from '@/types/activity';
 import type { ScreenState } from '@/types/ui';
 
 const isMockMode = import.meta.env.VITE_USE_MOCKS === 'true';
+
+interface RoundContext {
+  playId: string;
+  storeId: string;
+  gameType: GameType;
+  config: ActivityConfig;
+}
 
 const normalizeLocale = (language: string): Locale => {
   if (language.startsWith('zh')) {
@@ -74,6 +81,7 @@ export const GamePage = () => {
     authSessionId ||
     selectedStore?.id ||
     (isMockMode ? getDemoSessionId(activityId, selectedStore?.id) : '');
+  const storeId = selectedStore?.id || '';
   const locale = normalizeLocale(i18n.language);
 
   const isKiosk = isKioskMode();
@@ -89,20 +97,27 @@ export const GamePage = () => {
 
   const [config, setConfig] = useState<ActivityConfig | null>(null);
   const [screen, setScreen] = useState<ScreenState>('attract');
-  const [playId, setPlayId] = useState('');
-  const [completedGame, setCompletedGame] = useState<CompletedGamePayload | null>(null);
+  const [round, setRound] = useState<RoundContext | null>(null);
   const [rewardResult, setRewardResult] = useState<RewardResult | null>(null);
   const [error, setError] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isClaimSubmitting, setIsClaimSubmitting] = useState(false);
+  const [isStartingGame, setIsStartingGame] = useState(false);
+  const [isSubmittingResult, setIsSubmittingResult] = useState(false);
+  const isStartingGameRef = useRef(false);
+  const submittedPlayId = useRef<string | null>(null);
+
+  const logoutForMissingConfig = useCallback(() => {
+    clearStoredAuthState();
+    window.location.replace(`/login${window.location.search}`);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     const fixedT = i18n.getFixedT(locale);
 
     const loadConfig = async () => {
-      if (!sessionId) {
+      if (!sessionId || !storeId) {
         setError(fixedT('noSession'));
         setIsLoading(false);
         return;
@@ -116,18 +131,23 @@ export const GamePage = () => {
           activityId,
           locale,
           sessionId,
-          storeId: selectedStore?.id,
+          storeId,
         });
-        if (cancelled) {
-          return;
+        if (!cancelled) {
+          setConfig(nextConfig);
         }
-
-        setConfig(nextConfig);
       } catch (requestError) {
         if (cancelled) {
           return;
         }
-        setError(isActivityError(requestError) ? requestError.message : fixedT('configFailed'));
+
+        console.error('[PAD Game] Failed to load game configuration.', requestError);
+        if (isActivityError(requestError) && requestError.code === 'CONFIG_MISSING') {
+          logoutForMissingConfig();
+          return;
+        }
+
+        setError(getRequestErrorMessage(requestError, fixedT('configFailed')));
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -140,7 +160,7 @@ export const GamePage = () => {
     return () => {
       cancelled = true;
     };
-  }, [activityId, i18n, locale, selectedStore?.id, sessionId]);
+  }, [activityId, i18n, locale, logoutForMissingConfig, sessionId, storeId]);
 
   useEffect(() => {
     if (!toastMessage) {
@@ -157,62 +177,83 @@ export const GamePage = () => {
   }, [toastMessage]);
 
   const startGame = useCallback(
-    (gameType: GameType) => {
-      if (!config) {
+    async (gameType: GameType) => {
+      if (!config || !storeId || isStartingGameRef.current) {
         return;
       }
 
-      setError('');
+      isStartingGameRef.current = true;
+      setIsStartingGame(true);
       setToastMessage('');
-      setCompletedGame(null);
       setRewardResult(null);
-      setIsClaimSubmitting(false);
-      setPlayId(`${config.sessionId}-${gameType}-${Date.now()}`);
-      setScreen(gameType);
+
+      try {
+        const roundConfig = await ActivityApi.getConfig({
+          activityId,
+          locale,
+          sessionId,
+          storeId,
+        });
+        const playId = `${sessionId}-${gameType}-${Date.now()}`;
+        submittedPlayId.current = null;
+        setConfig(roundConfig);
+        setRound({ config: roundConfig, gameType, playId, storeId });
+        setScreen(gameType);
+      } catch (requestError) {
+        console.error('[PAD Game] Failed to refresh configuration before game start.', requestError);
+        if (isActivityError(requestError) && requestError.code === 'CONFIG_MISSING') {
+          logoutForMissingConfig();
+          return;
+        }
+
+        setToastMessage(getRequestErrorMessage(requestError, t('configFailed')));
+      } finally {
+        isStartingGameRef.current = false;
+        setIsStartingGame(false);
+      }
     },
-    [config],
+    [activityId, config, locale, logoutForMissingConfig, sessionId, storeId, t],
   );
 
   const completeGame = useCallback(
-    (result: CompletedGamePayload) => {
-      if (!config) {
+    async (completedGame: CompletedGamePayload) => {
+      if (
+        !round ||
+        completedGame.gameType !== round.gameType ||
+        submittedPlayId.current === round.playId
+      ) {
         return;
       }
 
-      setCompletedGame(result);
+      submittedPlayId.current = round.playId;
+      setIsSubmittingResult(true);
       setToastMessage('');
+
+      try {
+        const result = await ActivityApi.submitResult({
+          storeId: round.storeId,
+          playId: round.playId,
+          gameType: round.gameType,
+          clientResult: completedGame.clientResult,
+        });
+        setRewardResult(result);
+      } catch (requestError) {
+        console.error('[PAD Game] Failed to upload or parse the game result.', {
+          error: requestError,
+          gameType: round.gameType,
+          playId: round.playId,
+          storeId: round.storeId,
+        });
+        setRound(null);
+        setRewardResult(null);
+        setScreen('home');
+        setToastMessage(getRequestErrorMessage(requestError, t('uploadFailed')));
+      } finally {
+        setIsSubmittingResult(false);
+      }
     },
-    [config],
+    [round, t],
   );
-
-  const claimReward = useCallback(async () => {
-    if (!config || !completedGame || !playId || isClaimSubmitting) {
-      return;
-    }
-
-    setIsClaimSubmitting(true);
-    setToastMessage('');
-
-    try {
-      const result = await ActivityApi.submitResult({
-        config,
-        playId,
-        gameType: completedGame.gameType,
-        clientResult: completedGame.clientResult,
-      });
-      setRewardResult(result);
-      setCompletedGame(null);
-      setScreen('result');
-    } catch (requestError) {
-      setToastMessage(getRequestErrorMessage(requestError, t('startFailed')));
-    } finally {
-      setIsClaimSubmitting(false);
-    }
-  }, [completedGame, config, isClaimSubmitting, playId, t]);
-
-  const showGameError = useCallback((message: string) => {
-    setToastMessage(message);
-  }, []);
 
   const resetDemo = () => {
     window.localStorage.removeItem(getDemoSessionKey(activityId, selectedStore?.id));
@@ -220,17 +261,17 @@ export const GamePage = () => {
     window.location.reload();
   };
 
-  const kioskResultReset = useCallback(() => {
-    clearStoredAuthState();
-    window.location.replace('/login');
+  const handleBackFromGame = useCallback(() => {
+    setRound(null);
+    setRewardResult(null);
+    setScreen('home');
   }, []);
 
   const handleBackFromResult = useCallback(() => {
     setRewardResult(null);
-    setCompletedGame(null);
-    setPlayId('');
+    setRound(null);
     setToastMessage('');
-    setScreen('attract');
+    setScreen('home');
   }, []);
 
   if (isLoading) {
@@ -251,6 +292,7 @@ export const GamePage = () => {
     );
   }
 
+  const activeConfig = round?.config || config;
   const isGameRunning = screen === 'bingo' || screen === 'diamond_rain';
   const shellClassName = isGameRunning
     ? 'app-shell is-game-running'
@@ -266,52 +308,56 @@ export const GamePage = () => {
     <div className={shellClassName}>
       <FxLayer />
       {screen === 'attract' || isGameRunning || screen === 'result' || screen === 'home' ? null : (
-        <HeaderBar
-          sessionId={config.sessionId}
-          storeName={selectedStore?.name}
-        />
+        <HeaderBar sessionId={config.sessionId} storeName={selectedStore?.name} />
       )}
       {screen === 'attract' ? (
         <AttractScreen config={config} onEnter={() => setScreen('home')} />
       ) : null}
       {screen === 'home' ? (
-        <HomeScreen config={config} onBack={() => setScreen('attract')} onStart={startGame} />
-      ) : null}
-      {screen === 'bingo' && playId ? (
-        <BingoGame
+        <HomeScreen
           config={config}
-          onBack={() => setScreen('home')}
-          onComplete={completeGame}
-          onError={showGameError}
-          playId={playId}
+          isStarting={isStartingGame}
+          onBack={() => setScreen('attract')}
+          onStart={startGame}
         />
       ) : null}
-      {screen === 'diamond_rain' && playId ? (
-        <DiamondRainGame
-          config={config}
-          onBack={() => setScreen('home')}
+      {screen === 'bingo' && round?.gameType === 'bingo' ? (
+        <BingoGame
+          config={activeConfig}
+          onBack={handleBackFromGame}
           onComplete={completeGame}
-          onError={showGameError}
-          playId={playId}
+        />
+      ) : null}
+      {screen === 'diamond_rain' && round?.gameType === 'diamond_rain' ? (
+        <DiamondRainGame
+          config={activeConfig}
+          onBack={handleBackFromGame}
+          onComplete={completeGame}
         />
       ) : null}
       {screen === 'result' && rewardResult ? (
         <ResultScreen
-          autoResetMs={isKiosk ? RESULT_AUTO_RESET_MS : undefined}
-          onAutoReset={isKiosk ? kioskResultReset : undefined}
+          autoResetMs={
+            activeConfig.qrReturnSeconds > 0 ? activeConfig.qrReturnSeconds * 1000 : undefined
+          }
+          onAutoReset={handleBackFromResult}
           onBack={handleBackFromResult}
           result={rewardResult}
         />
       ) : null}
-      {completedGame ? (
-        <CompletionClaimModal
-          completedGame={completedGame}
-          config={config}
-          isSubmitting={isClaimSubmitting}
-          onClaim={claimReward}
-        />
+      {rewardResult && screen !== 'result' ? (
+        <CompletionClaimModal result={rewardResult} onClaim={() => setScreen('result')} />
       ) : null}
-      {toastMessage ? <div className="toast-error">{toastMessage}</div> : null}
+      {isSubmittingResult ? (
+        <div aria-live="polite" className="round-uploading" role="status">
+          {t('uploadingResult')}
+        </div>
+      ) : null}
+      {toastMessage ? (
+        <div className="toast-error" role="alert">
+          {toastMessage}
+        </div>
+      ) : null}
     </div>
   );
 };

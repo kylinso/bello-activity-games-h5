@@ -1,26 +1,11 @@
-import { type CSSProperties, useMemo } from 'react';
+import { type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatCurrency, getRewardLabel } from '@/lib/gameRules';
-import type { ActivityConfig, CompletedGamePayload } from '@/types/activity';
+import type { RewardResult } from '@/types/activity';
 
 interface CompletionClaimModalProps {
-  completedGame: CompletedGamePayload;
-  config: ActivityConfig;
-  isSubmitting: boolean;
+  result: RewardResult;
   onClaim: () => void;
 }
-
-const getModalAmountText = (config: ActivityConfig, amount: number) => {
-  if (config.rewardType === 'cash_voucher') {
-    return formatCurrency(amount, config.bingo.currency, config.locale);
-  }
-
-  if (config.rewardType === 'bello_points') {
-    return `${amount} BP`;
-  }
-
-  return `${amount}`;
-};
 
 const confettiColors = ['#ffd21a', '#ff8a18', '#ff4b3e', '#60f0d2', '#a4df4a', '#ff9fb0', '#fff6b8'];
 const confettiKinds = ['rect', 'streamer', 'star', 'circle'] as const;
@@ -43,20 +28,14 @@ const confettiPieces = Array.from({ length: 72 }, (_, index) => {
   };
 });
 
-export const CompletionClaimModal = ({
-  completedGame,
-  config,
-  isSubmitting,
-  onClaim,
-}: CompletionClaimModalProps) => {
+export const CompletionClaimModal = ({ result, onClaim }: CompletionClaimModalProps) => {
   const { t } = useTranslation();
-  const amountText = useMemo(
-    () => getModalAmountText(config, completedGame.rewardAmount),
-    [completedGame.rewardAmount, config],
-  );
-  const rewardLabel = useMemo(() => getRewardLabel(config.rewardType).toUpperCase(), [
-    config.rewardType,
-  ]);
+  const amountText =
+    result.rewardType === 'COUPON' ? result.couponName : `${result.rewardAmount} BP`;
+  const detailText =
+    result.rewardType === 'COUPON'
+      ? t('coupon')
+      : `${t('gameScoreLabel')}: ${result.gameScore}`;
 
   return (
     <div className="claim-modal-layer" role="presentation">
@@ -89,17 +68,14 @@ export const CompletionClaimModal = ({
         <img alt="" className="claim-modal-panel" src="/claim-modal/panel.webp" />
         <div className="claim-modal-reward" aria-live="polite">
           <strong>{amountText}</strong>
-          <span>{rewardLabel}</span>
+          <span>{detailText}</span>
         </div>
         <button
           aria-label={t('scanToClaim')}
           className="claim-modal-button"
-          disabled={isSubmitting}
           onClick={onClaim}
           type="button"
-        >
-          {isSubmitting ? <span>{t('submitting')}</span> : null}
-        </button>
+        />
       </section>
     </div>
   );
