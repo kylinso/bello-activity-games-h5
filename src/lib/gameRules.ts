@@ -49,6 +49,21 @@ export const getColoredScoreValue = (config: DiamondRainConfig) => {
     : 0;
 };
 
+export const getNextDiamondRainScore = (
+  currentScore: number,
+  itemType: 'diamond' | 'colored' | 'bomb',
+  config: DiamondRainConfig,
+) => {
+  const scoreDelta =
+    itemType === 'diamond'
+      ? config.diamondValue
+      : itemType === 'colored'
+        ? getColoredScoreValue(config)
+        : config.bombValue;
+
+  return Math.max(config.minScore, currentScore + scoreDelta);
+};
+
 export const getDiamondRainScoreRange = (
   config: DiamondRainConfig,
 ): { min: number; max: number } => {
