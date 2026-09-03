@@ -7055,6 +7055,8 @@ svg {
 .choice-game-card {
   position: relative;
   display: grid;
+  /* Fallback for kiosk WebViews without dynamic viewport unit support. */
+  min-height: clamp(440px, 46vh, 600px);
   min-height: clamp(440px, 46dvh, 600px);
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: clamp(16px, 2.2dvh, 26px);
@@ -7515,6 +7517,7 @@ svg {
   }
 
   .choice-game-card {
+    min-height: clamp(330px, 48vh, 500px);
     min-height: clamp(330px, 48dvh, 500px);
     gap: clamp(14px, 2.4dvh, 24px);
     padding: clamp(24px, 4dvh, 34px);
@@ -7531,6 +7534,7 @@ svg {
   }
 
   .choice-game-card {
+    min-height: clamp(420px, 46vh, 560px);
     min-height: clamp(420px, 46dvh, 560px);
     padding: clamp(20px, 2.8dvh, 32px) clamp(18px, 2.4vw, 26px) clamp(18px, 2.4dvh, 28px);
   }
